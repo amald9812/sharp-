@@ -174,6 +174,32 @@ textarea{resize:vertical}
 .week{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .week li{display:grid;grid-template-columns:44px 1fr;gap:8px;font-size:14.5px}
 
+/* Library */
+.cover{width:56px;height:84px;border-radius:8px;object-fit:cover;background:var(--soft);flex:none;box-shadow:0 2px 8px rgba(17,19,24,.14)}
+.cover.sm{width:38px;height:56px;border-radius:6px;box-shadow:0 1px 4px rgba(17,19,24,.12)}
+.cover.lg{width:92px;height:138px;border-radius:12px}
+.cover.ph{display:grid;place-items:center;font-family:var(--f-display);font-weight:700;color:var(--muted);font-size:17px;letter-spacing:.04em}
+.cover.sm.ph{font-size:13px}
+.book{display:flex;gap:14px;align-items:flex-start;cursor:pointer}
+.bk-main{display:grid;gap:6px;min-width:0;flex:1}
+.bk-main b{font-size:17px;line-height:1.25}
+.mlist{list-style:none;margin:6px 0 0;padding:0}
+.mlist li{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);cursor:pointer}
+.mlist li:first-child{border-top:0}
+.mlist .mt{flex:1;min-width:0;font-weight:600;line-height:1.25}
+.mlist .mt small{display:block;color:var(--muted);font-weight:500;font-size:13px;margin-top:3px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stats > div{display:grid;gap:4px;align-content:start}
+.stats b{font-family:var(--f-display);font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.stars{color:#D49B00;letter-spacing:1px}
+.ratepick{display:flex;gap:8px}
+.ratepick button{border:0;background:var(--soft);border-radius:12px;width:44px;height:44px;font-size:22px;color:#C9CDD6}
+.ratepick button.on{color:#D49B00;background:#FDF3CF}
+.media{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mtile{border:0;background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:12px;display:flex;gap:10px;align-items:center;text-align:left;min-width:0}
+.mtile b{font-size:14.5px;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin:2px 0}
+.mtile .eyebrow{display:block}
+
 /* Weight chart */
 .chart{width:100%;height:auto;display:block}
 
@@ -199,7 +225,7 @@ textarea{resize:vertical}
 /* Tab bar */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.94);-webkit-backdrop-filter:saturate(180%) blur(16px);backdrop-filter:saturate(180%) blur(16px);
   border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom, 0px)}
-.tabbar .col{display:grid;grid-template-columns:repeat(4,1fr);padding-top:6px;padding-bottom:6px}
+.tabbar .col{display:grid;grid-template-columns:repeat(5,1fr);padding-top:6px;padding-bottom:6px}
 .tabbar button{border:0;background:none;display:grid;justify-items:center;gap:2px;padding:6px 0;font-size:11.5px;font-weight:700;color:#9AA1AE;letter-spacing:.02em}
 .tabbar svg{width:24px;height:24px}
 .tabbar button[aria-selected="true"]{color:var(--ink)}
@@ -220,7 +246,7 @@ textarea{resize:vertical}
 .connect{min-height:80vh;display:grid;place-items:center}
 .connect .card{display:grid;gap:14px;width:100%}
 @media (prefers-reduced-motion: reduce){.ring .prog,.dayline i{transition:none}}
-@media (max-width:380px){.quick .qa .v{font-size:22px}.big{font-size:38px}}
+@media (max-width:380px){.quick .qa .v{font-size:22px}.big{font-size:38px}.tabbar button{font-size:10.5px}}
 </style>
 </head>
 <body>
@@ -287,6 +313,7 @@ textarea{resize:vertical}
       <div class="tile" id="buddyTile"></div>
     </div>
     <div class="quick" id="quick"></div>
+    <div class="media" id="nowMedia" hidden></div>
     <details class="fold" id="foldTop3"><summary>Top 3 priorities <span id="top3Count"></span></summary><div><ol class="checks top3" id="top3"></ol></div></details>
     <details class="fold" id="foldHabits"><summary>Habits <span id="habitCount"></span></summary><div><ul class="checks" id="habits"></ul></div></details>
     <div class="card">
@@ -388,6 +415,13 @@ textarea{resize:vertical}
     </div>
   </section>
 
+  <!-- LIBRARY -->
+  <section id="v-lib" class="view" hidden>
+    <div class="row" style="justify-content:space-between"><h2 class="h2">Library</h2><button class="btn" type="button" id="libAdd">Add</button></div>
+    <div class="seg" id="libSeg"></div>
+    <div id="libBody" style="display:grid;gap:14px"></div>
+  </section>
+
   <!-- ME -->
   <section id="v-me" class="view" hidden>
     <div class="card" style="display:grid;gap:14px" id="streakCard"></div>
@@ -399,6 +433,9 @@ textarea{resize:vertical}
       <label class="field">Email for the nightly summary<input type="email" id="meEmail" placeholder="you@gmail.com"></label>
       <label class="switch">Email me a summary of us both at 10:15 PM<input type="checkbox" id="meNightly"></label>
       <label class="switch">Show my weight to my partner<input type="checkbox" id="meShareWeight"></label>
+      <label class="switch">Share my books with my partner<input type="checkbox" id="meShareBooks"></label>
+      <label class="switch">Share my movies &amp; series with my partner<input type="checkbox" id="meShareMovies"></label>
+      <label class="field">Books to finish this year<input type="number" id="meGoal" inputmode="numeric" min="1" max="200"></label>
     </div>
     <div class="card" style="display:grid;gap:12px">
       <span class="eyebrow">This device</span>
@@ -416,6 +453,7 @@ textarea{resize:vertical}
     <button type="button" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg>Today</button>
     <button type="button" data-tab="plan" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="17.5" r="1" fill="currentColor"/></svg>Plan</button>
     <button type="button" data-tab="gym" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>Gym</button>
+    <button type="button" data-tab="lib" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5.5c2.7-1 5.3-1 8 .8v13c-2.7-1.8-5.3-1.8-8-.8z"/><path d="M20 5.5c-2.7-1-5.3-1-8 .8v13c2.7-1.8 5.3-1.8 8-.8z"/></svg>Library</button>
     <button type="button" data-tab="me" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.3 7.5-5.3s6.3 1.7 7.5 5.3"/></svg>Me</button>
   </div>
 </nav>
@@ -530,7 +568,19 @@ var SharpCore = (function () {
     }
     return n;
   }
-  return { pad: pad, dateOfKey: dateOfKey, keyOfUTC: keyOfUTC, addDays: addDays, wdOf: wdOf, tplOf: tplOf,
+  /** Consecutive days where test(dayRecord) is true; today counts once it's true, paused days are skipped. */
+  function runStreak(profile, days, todayKey, test) {
+    var n = 0, k = todayKey, guard = 0;
+    if (days[k] && test(days[k])) n++;
+    k = addDays(k, -1);
+    while (guard < 2000) {
+      if (profile && profile.since && k < profile.since) break;
+      if (!pauseFor(profile, k)) { if (days[k] && test(days[k])) n++; else break; }
+      k = addDays(k, -1); guard++;
+    }
+    return n;
+  }
+  return { runStreak: runStreak, pad: pad, dateOfKey: dateOfKey, keyOfUTC: keyOfUTC, addDays: addDays, wdOf: wdOf, tplOf: tplOf,
     istKey: istKey, requiredFor: requiredFor, pauseFor: pauseFor, dayStatus: dayStatus, level: level,
     streak: streak, gymStreak: gymStreak, coupleStreak: coupleStreak };
 })();
@@ -541,7 +591,7 @@ var SharpCore = (function () {
 (function () {
 "use strict";
 var C = SharpCore;
-var APP_VERSION = 4;
+var APP_VERSION = 5;
 var IST = 330;
 var WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 var WDL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -737,7 +787,7 @@ function partnerConfig(){
 function defaultConfig(user){ return user === "b" ? partnerConfig() : amalConfig(); }
 function defaultProfile(user){
   return { name: user === "a" ? "Amal" : "", since: now().key, pauses:[], freezeCap:5, weighDay:0, goalKg:null,
-           shareWeight:false, email:"", nightly:false, updatedAt:0 };
+           shareWeight:false, shareBooks:true, shareMovies:true, readGoal:12, email:"", nightly:false, updatedAt:0 };
 }
 
 /* ---------------- normalising stored data ---------------- */
@@ -772,7 +822,8 @@ function normProfile(p, user){
   return { name:String(p.name != null ? p.name : d.name), since: /^\d{4}-\d{2}-\d{2}$/.test(p.since || "") ? p.since : d.since,
     pauses: Array.isArray(p.pauses) ? p.pauses.filter(function(x){ return x && x.from; }).map(function(x){ return { from:String(x.from), to:x.to ? String(x.to) : null, reason:String(x.reason || "") }; }) : [],
     freezeCap: Math.max(1, Math.min(10, +p.freezeCap || 5)), weighDay: p.weighDay == null ? 0 : +p.weighDay,
-    goalKg: p.goalKg ? +p.goalKg : null, shareWeight:!!p.shareWeight, email:String(p.email || ""), nightly:!!p.nightly, updatedAt:Number(p.updatedAt) || 0 };
+    goalKg: p.goalKg ? +p.goalKg : null, shareWeight:!!p.shareWeight, shareBooks:p.shareBooks !== false, shareMovies:p.shareMovies !== false,
+    readGoal: Math.max(1, Math.min(200, Math.round(+p.readGoal || 12))), email:String(p.email || ""), nightly:!!p.nightly, updatedAt:Number(p.updatedAt) || 0 };
 }
 function normDay(r, k){
   r = r || {};
@@ -780,7 +831,7 @@ function normDay(r, k){
   return { date:k, checks: r.checks && typeof r.checks === "object" ? Object.assign({}, r.checks) : {},
     req: Array.isArray(r.req) ? r.req.map(String) : null,
     top3:[0,1,2].map(function(i){ var x = t[i] || {}; return { t:String(x.t || ""), done:!!x.done }; }),
-    water: Math.max(0, Math.min(60, Number(r.water) || 0)),
+    water: Math.max(0, Math.min(60, Number(r.water) || 0)), readPages: Math.max(0, Number(r.readPages) || 0),
     pings: r.pings && typeof r.pings === "object" ? Object.assign({}, r.pings) : {},
     habits: r.habits && typeof r.habits === "object" ? Object.assign({}, r.habits) : {},
     wo:{ done: wo.done && typeof wo.done === "object" ? Object.assign({}, wo.done) : {}, notes:String(wo.notes || ""), complete:!!wo.complete },
@@ -804,13 +855,16 @@ function loadLocal(){
   S = lsGet(storeKey(), null); pending = lsGet(storeKey() + ".pending", {}) || {};
   if (S) {
     S.me.days = S.me.days || {}; S.buddy = S.buddy || { days:{} }; S.buddy.days = S.buddy.days || {};
+    ["books","movies"].forEach(function(x){ S.me[x] = S.me[x] || {}; S.buddy[x] = S.buddy[x] || {}; });
     Object.keys(S.me.days).forEach(function(k){ S.me.days[k] = normDay(S.me.days[k], k); });
+    Object.keys(S.me.books).forEach(function(k){ S.me.books[k] = normBook(S.me.books[k]); });
+    Object.keys(S.me.movies).forEach(function(k){ S.me.movies[k] = normMovie(S.me.movies[k]); });
   }
 }
 function dev(){ return Object.assign({ alerts:false, awake:false }, lsGet("sharp4.dev", {}) || {}); }
 function setDev(o){ lsSet("sharp4.dev", Object.assign(dev(), o)); }
 
-function emptyState(user){ return { user:user, me:{ config:null, profile:null, weights:null, days:{} }, buddy:{ config:null, profile:null, weights:null, days:{} }, since:0, buddySince:0, cheers:[], cal:{}, bootstrapped:false }; }
+function emptyState(user){ return { user:user, me:{ config:null, profile:null, weights:null, days:{}, books:{}, movies:{} }, buddy:{ config:null, profile:null, weights:null, days:{}, books:{}, movies:{} }, since:0, buddySince:0, cheers:[], cal:{}, bootstrapped:false, serverVersion:0 }; }
 
 /* ---------------- connection ---------------- */
 function b64urlDecode(s){
@@ -871,7 +925,11 @@ function doSync(){
       if (res && res.code === "auth") { disconnect("Your link no longer works. Paste your latest Sharp link."); return; }
       throw new Error((res && res.error) || "Sync failed");
     }
-    Object.keys(sent).forEach(function(k){ if (pending[k] && pending[k].u === sent[k]) delete pending[k]; });
+    var oldServer = (res.version || 4) < 5;
+    Object.keys(sent).forEach(function(k){
+      if (oldServer && /^(book|movie)\//.test(k)) return; // an older server can't store these yet; keep them for later
+      if (pending[k] && pending[k].u === sent[k]) delete pending[k];
+    });
     if (cheer && outCheer === cheer) outCheer = null;
     applyServer(res);
     lastSync = Date.now(); setSync("ok");
@@ -889,6 +947,8 @@ function mergeSide(side, rows, mine, user){
     else if (k === "profile") side.profile = normProfile(obj, user);
     else if (k === "weights") side.weights = it.hidden ? null : normWeights(obj);
     else if (k.indexOf("day/") === 0) { var d = k.slice(4); side.days[d] = normDay(obj, d); }
+    else if (k.indexOf("book/") === 0) { side.books = side.books || {}; side.books[k.slice(5)] = normBook(obj); }
+    else if (k.indexOf("movie/") === 0) { side.movies = side.movies || {}; side.movies[k.slice(6)] = normMovie(obj); }
   });
   return changed;
 }
@@ -897,6 +957,9 @@ function applyServer(res){
   var other = res.user === "a" ? "b" : "a";
   mergeSide(S.me, res.me, true, res.user);
   mergeSide(S.buddy, res.buddy, false, other);
+  S.serverVersion = res.version || 4;
+  if (res.buddyHidden) { if (res.buddyHidden.books) S.buddy.books = {}; if (res.buddyHidden.movies) S.buddy.movies = {}; }
+  ["books","movies"].forEach(function(x){ S.me[x] = S.me[x] || {}; S.buddy[x] = S.buddy[x] || {}; });
   S.since = res.now; S.buddySince = res.now;
   S.cheers = res.cheers || []; S.cal = res.cal || {};
   var created = false;
@@ -969,7 +1032,7 @@ function buddyStreak(){
 function setTab(t){
   if (t === "edit" && !draft) draft = clone(S.me.config);
   ui.tab = t;
-  ["today","plan","gym","me","edit"].forEach(function(x){ $("v-" + x).hidden = x !== t; });
+  ["today","plan","gym","lib","me","edit"].forEach(function(x){ $("v-" + x).hidden = x !== t; });
   Array.prototype.forEach.call(document.querySelectorAll("#tabbar [data-tab]"), function(b){
     var on = b.getAttribute("data-tab") === t || (t === "edit" && b.getAttribute("data-tab") === "plan");
     b.setAttribute("aria-selected", on);
@@ -983,7 +1046,7 @@ function renderAll(){
   if (!conn) { showConnect(); return; }
   if (!S || !S.bootstrapped) { showLoading(); return; }
   $("v-connect").hidden = true; $("v-loading").hidden = true; $("tabbar").hidden = false;
-  if (["today","plan","gym","me","edit"].indexOf(ui.tab) < 0) ui.tab = "today";
+  if (["today","plan","gym","lib","me","edit"].indexOf(ui.tab) < 0) ui.tab = "today";
   setTab(ui.tab);
 }
 function renderView(){
@@ -993,6 +1056,7 @@ function renderView(){
   else if (ui.tab === "plan") renderPlan(t);
   else if (ui.tab === "gym") renderGym(t);
   else if (ui.tab === "me") renderMe(t);
+  else if (ui.tab === "lib") renderLib(t);
   else if (ui.tab === "edit") renderEditor();
 }
 function renderLive(){ if (S && S.bootstrapped && ui.tab !== "edit") renderView(); else if (S && S.bootstrapped) renderHeader(now()); }
@@ -1090,6 +1154,7 @@ function renderToday(t){
     q += '<button class="qa' + (snacks.length && sd === snacks.length ? " done" : "") + '" type="button" id="qaSnack"><span class="v">' + sd + '<span class="muted" style="font-size:16px">/' + snacks.length + '</span></span><span class="l">Snacks</span></button>';
   }
   $("quick").innerHTML = q;
+  renderNowMedia();
 
   // top 3 (workdays)
   var isWork = C.tplOf(t.key) === "weekday";
@@ -1269,6 +1334,8 @@ function renderMe(t){
   var nm = $("meName"); if (document.activeElement !== nm) nm.value = prof.name;
   var em = $("meEmail"); if (document.activeElement !== em) em.value = prof.email;
   $("meNightly").checked = prof.nightly; $("meShareWeight").checked = prof.shareWeight;
+  $("meShareBooks").checked = prof.shareBooks; $("meShareMovies").checked = prof.shareMovies;
+  var rg = $("meGoal"); if (document.activeElement !== rg) rg.value = prof.readGoal;
   var d = dev(); $("devAlerts").checked = d.alerts; $("devAwake").checked = d.awake;
   $("devHint").textContent = d.alerts && (!audioCtx || audioCtx.state !== "running") ? "Tap anywhere once so the chime can play." : "Your calendar handles alerts when Sharp is closed.";
   $("syncLbl").textContent = (conn.demo ? "Demo mode: nothing is saved to Google." : syncMsg) + " · Sharp v" + APP_VERSION;
@@ -1488,14 +1555,381 @@ function showIncomingCheer(){
   $("cheerBanner").innerHTML = '<div class="banner"><span class="avatar" style="background:var(--signal);color:var(--ink)">' + esc(who[0] || "?") + '</span><div><b>' + esc(who) + '</b><div class="small" style="opacity:.85">' + esc(c.text) + '</div></div><div class="x"><button class="pill sm" type="button" id="cheerSeen" data-ids="' + inc.map(function(x){ return x.id; }).join(",") + '">Thanks</button></div></div>';
 }
 
+/* ---------------- library: books, movies & series ---------------- */
+var BOOK_STATUS = { reading:"Reading", want:"Want to read", paused:"Paused", done:"Finished" };
+var MOVIE_STATUS = { watching:"Watching", list:"Watchlist", done:"Watched", dropped:"Dropped" };
+var lib = { seg:"books", results:[], busy:false, msg:"" };
+var sheetCtx = null;
+
+function normBook(b){
+  b = b || {};
+  return { id:String(b.id || uid()), title:String(b.title || "Untitled"), author:String(b.author || ""), pages:Math.max(0, Math.round(+b.pages || 0)),
+    cover:String(b.cover || ""), status: BOOK_STATUS[b.status] ? b.status : "want", page:Math.max(0, Math.round(+b.page || 0)),
+    started:b.started ? String(b.started) : "", finished:b.finished ? String(b.finished) : "", rating:Math.max(0, Math.min(5, +b.rating || 0)),
+    notes:String(b.notes || ""), sessions: Array.isArray(b.sessions) ? b.sessions.filter(function(x){ return x && x.d; }).map(function(x){ return { d:String(x.d), p:Math.round(+x.p || 0) }; }) : [],
+    year:String(b.year || ""), deleted:!!b.deleted, updatedAt:Number(b.updatedAt) || 0 };
+}
+function normMovie(m){
+  m = m || {};
+  return { id:String(m.id || uid()), title:String(m.title || "Untitled"), type: m.type === "series" ? "series" : "movie", poster:String(m.poster || ""),
+    desc:String(m.desc || ""), status: MOVIE_STATUS[m.status] ? m.status : "list", platform:String(m.platform || ""),
+    season:Math.max(1, Math.round(+m.season || 1)), ep:Math.max(1, Math.round(+m.ep || 1)), eps:Math.max(0, Math.round(+m.eps || 0)),
+    watchedOn:m.watchedOn ? String(m.watchedOn) : "", rating:Math.max(0, Math.min(5, +m.rating || 0)), notes:String(m.notes || ""),
+    together:!!m.together, deleted:!!m.deleted, updatedAt:Number(m.updatedAt) || 0 };
+}
+function listOf(side, kind){
+  var o = (side && side[kind]) || {};
+  return Object.keys(o).map(function(k){ return o[k]; }).filter(function(x){ return !x.deleted; });
+}
+function saveBook(b){ b = normBook(b); S.me.books[b.id] = b; queue("book/" + b.id, b); renderLive(); return b; }
+function saveMovie(m){ m = normMovie(m); S.me.movies[m.id] = m; queue("movie/" + m.id, m); renderLive(); return m; }
+function stars(n){ var s = ""; for (var i = 1; i <= 5; i++) s += i <= n ? "★" : "☆"; return '<span class="stars" aria-label="' + n + ' of 5">' + s + '</span>'; }
+function coverImg(url, title, cls){
+  if (url) return '<img class="cover ' + (cls || "") + '" src="' + esc(url) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.removeAttribute(\'src\')">';
+  return '<span class="cover ph ' + (cls || "") + '">' + esc((title || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "•") + '</span>';
+}
+function bookPct(b){ return b.pages ? Math.min(100, Math.round(b.page / b.pages * 100)) : 0; }
+function bookPace(b, today){
+  var from = C.addDays(today, -13), sum = 0;
+  b.sessions.forEach(function(s){ if (s.d >= from) sum += s.p; });
+  var span = 14;
+  if (b.started && b.started > from) span = Math.max(1, Math.round((C.dateOfKey(today) - C.dateOfKey(b.started)) / 86400000) + 1);
+  return sum / span;
+}
+function bookLine(b, today){
+  if (!b.pages) return "Page " + b.page;
+  var line = "p. " + b.page + " of " + b.pages + " · " + bookPct(b) + "%";
+  var pace = bookPace(b, today), left = b.pages - b.page;
+  if (b.status === "reading" && pace > 0 && left > 0) {
+    var d = Math.ceil(left / pace);
+    line += " · done " + (d <= 1 ? "tomorrow" : "in ~" + d + " days");
+  }
+  return line;
+}
+function nextEp(m){ return m.type === "series" ? "S" + m.season + " · E" + m.ep : ""; }
+function readStreak(){ return C.runStreak(S.me.profile, S.me.days, now().key, function(r){ return (r.readPages || 0) > 0; }); }
+
+function renderLib(t){
+  $("libSeg").innerHTML = '<button type="button" data-libseg="books" aria-pressed="' + (lib.seg === "books") + '">Books</button>' +
+    '<button type="button" data-libseg="watch" aria-pressed="' + (lib.seg === "watch") + '">Movies &amp; series</button>';
+  var warn = S.serverVersion && S.serverVersion < 5 ? '<p class="warnbox">Your server is still version ' + S.serverVersion + '. The library saves on this device only until you update Code.gs (see the setup guide).</p>' : "";
+  $("libBody").innerHTML = warn + (lib.seg === "books" ? booksHTML(t) : moviesHTML(t));
+}
+function booksHTML(t){
+  var all = listOf(S.me, "books"), today = t.key, year = today.slice(0, 4);
+  var reading = all.filter(function(b){ return b.status === "reading"; }).sort(function(a, b){ return b.updatedAt - a.updatedAt; });
+  var want = all.filter(function(b){ return b.status === "want"; });
+  var paused = all.filter(function(b){ return b.status === "paused"; });
+  var done = all.filter(function(b){ return b.status === "done"; }).sort(function(a, b){ return a.finished < b.finished ? 1 : -1; });
+  var doneYear = done.filter(function(b){ return (b.finished || "").slice(0, 4) === year; }).length;
+  var weekFrom = C.addDays(today, -6), pagesWeek = 0;
+  Object.keys(S.me.days).forEach(function(k){ if (k >= weekFrom && k <= today) pagesWeek += S.me.days[k].readPages || 0; });
+  var goal = S.me.profile.readGoal || 12;
+  var h = '<div class="card stats"><div><b>' + readStreak() + '</b><span class="small muted">day reading streak</span></div>' +
+    '<div><b>' + doneYear + '<span class="muted" style="font-size:16px">/' + goal + '</span></b><span class="small muted">books in ' + year + '</span></div>' +
+    '<div><b>' + pagesWeek + '</b><span class="small muted">pages this week</span></div></div>';
+  if (!all.length) h += '<div class="card" style="display:grid;gap:10px"><b>Your shelf is empty</b><p class="note">Add the book you\'re reading now. Sharp fills in the cover and page count for you.</p><button class="btn" type="button" data-libadd="books">Add a book</button></div>';
+  reading.forEach(function(b){
+    h += '<div class="card book" data-book="' + esc(b.id) + '">' + coverImg(b.cover, b.title) +
+      '<div class="bk-main"><b>' + esc(b.title) + '</b><span class="small muted">' + esc(b.author) + '</span>' +
+      '<div class="lvbar"><i style="width:' + bookPct(b) + '%"></i></div><span class="small">' + esc(bookLine(b, today)) + '</span>' +
+      '<div class="row"><button class="pill sm ink" type="button" data-logpages="' + esc(b.id) + '">Log pages</button></div></div></div>';
+  });
+  function shelf(title, list, btn){
+    if (!list.length) return "";
+    return '<div class="card"><span class="eyebrow">' + title + ' · ' + list.length + '</span><ul class="mlist">' + list.map(function(b){
+      return '<li data-book="' + esc(b.id) + '">' + coverImg(b.cover, b.title, "sm") + '<span class="mt">' + esc(b.title) +
+        '<small>' + esc(b.author) + (b.status === "done" ? (b.finished ? " · " + esc(dayLabel(b.finished)) : "") : (b.pages ? " · " + b.pages + " pages" : "")) + (b.status === "done" && b.rating ? " " + stars(b.rating) : "") + '</small></span>' +
+        (btn ? '<button class="pill sm" type="button" data-bstart="' + esc(b.id) + '">' + btn + '</button>' : "") + '</li>';
+    }).join("") + '</ul></div>';
+  }
+  h += shelf("Want to read", want, "Start") + shelf("Paused", paused, "Resume") + shelf("Finished", done, "");
+  var pb = listOf(S.buddy, "books").filter(function(b){ return b.status === "reading"; });
+  if (pb.length && S.buddy.profile) {
+    h += '<div class="card"><span class="eyebrow">' + esc(S.buddy.profile.name || "Partner") + ' is reading</span><ul class="mlist">' + pb.map(function(b){
+      return '<li>' + coverImg(b.cover, b.title, "sm") + '<span class="mt">' + esc(b.title) + '<small>' + esc(b.author) + ' · ' + bookPct(b) + '%</small></span></li>';
+    }).join("") + '</ul></div>';
+  }
+  return h;
+}
+function moviesHTML(t){
+  var all = listOf(S.me, "movies");
+  var watching = all.filter(function(m){ return m.status === "watching"; }).sort(function(a, b){ return b.updatedAt - a.updatedAt; });
+  var list = all.filter(function(m){ return m.status === "list"; });
+  var done = all.filter(function(m){ return m.status === "done"; }).sort(function(a, b){ return a.watchedOn < b.watchedOn ? 1 : -1; });
+  var dropped = all.filter(function(m){ return m.status === "dropped"; });
+  var h = "";
+  if (!all.length) h += '<div class="card" style="display:grid;gap:10px"><b>Nothing here yet</b><p class="note">Add what you\'re watching now, or your watchlist for the 8–10 AM screen slot.</p><button class="btn" type="button" data-libadd="watch">Add a movie or series</button></div>';
+  watching.forEach(function(m){
+    var act = m.type === "series"
+      ? '<button class="pill sm ink" type="button" data-ep="' + esc(m.id) + '">Watched E' + m.ep + '</button>'
+      : '<button class="pill sm ink" type="button" data-mdone="' + esc(m.id) + '">Watched it</button>';
+    h += '<div class="card book" data-movie="' + esc(m.id) + '">' + coverImg(m.poster, m.title) +
+      '<div class="bk-main"><span class="eyebrow">' + (m.type === "series" ? "Series" : "Movie") + (m.platform ? " · " + esc(m.platform) : "") + '</span><b>' + esc(m.title) + '</b>' +
+      (m.type === "series" ? '<span class="small">Next: <b>' + nextEp(m) + '</b>' + (m.eps ? ' of ' + m.eps : "") + '</span>' : '<span class="small muted">' + esc(m.desc) + '</span>') +
+      '<div class="row">' + act + '</div></div></div>';
+  });
+  function shelf(title, items, btn, attr){
+    if (!items.length) return "";
+    return '<div class="card"><span class="eyebrow">' + title + ' · ' + items.length + '</span><ul class="mlist">' + items.map(function(m){
+      var sub = m.status === "done" ? (m.watchedOn ? esc(dayLabel(m.watchedOn)) : "") + (m.rating ? " " + stars(m.rating) : "") : esc(m.type === "series" ? "Series" : "Movie") + (m.platform ? " · " + esc(m.platform) : "") + (m.together ? " · together" : "");
+      return '<li data-movie="' + esc(m.id) + '">' + coverImg(m.poster, m.title, "sm") + '<span class="mt">' + esc(m.title) + '<small>' + sub + '</small></span>' +
+        (btn ? '<button class="pill sm" type="button" ' + attr + '="' + esc(m.id) + '">' + btn + '</button>' : "") + '</li>';
+    }).join("") + '</ul></div>';
+  }
+  var togetherMine = all.filter(function(m){ return m.together && m.status !== "done" && m.status !== "dropped"; });
+  var mineTitles = all.map(function(m){ return m.title.toLowerCase(); });
+  var togetherTheirs = listOf(S.buddy, "movies").filter(function(m){ return m.together && m.status !== "done" && m.status !== "dropped" && mineTitles.indexOf(m.title.toLowerCase()) < 0; });
+  if (togetherMine.length || togetherTheirs.length) {
+    var bn = (S.buddy.profile && S.buddy.profile.name) || "Partner";
+    h += '<div class="card"><span class="eyebrow">Watch together</span><ul class="mlist">' +
+      togetherMine.map(function(m){ return '<li data-movie="' + esc(m.id) + '">' + coverImg(m.poster, m.title, "sm") + '<span class="mt">' + esc(m.title) + '<small>Your pick' + (m.type === "series" ? " · " + nextEp(m) : "") + '</small></span></li>'; }).join("") +
+      togetherTheirs.map(function(m){ return '<li>' + coverImg(m.poster, m.title, "sm") + '<span class="mt">' + esc(m.title) + '<small>' + esc(bn) + '\'s pick' + (m.type === "series" ? " · " + nextEp(m) : "") + '</small></span><button class="pill sm" type="button" data-copymovie="' + esc(m.id) + '">Add to mine</button></li>'; }).join("") +
+      '</ul></div>';
+  }
+  h += shelf("Watchlist", list, "Start", "data-mstart") + shelf("Watched", done, "", "") + shelf("Dropped", dropped, "", "");
+  var pw = listOf(S.buddy, "movies").filter(function(m){ return m.status === "watching"; });
+  if (pw.length && S.buddy.profile) {
+    h += '<div class="card"><span class="eyebrow">' + esc(S.buddy.profile.name || "Partner") + ' is watching</span><ul class="mlist">' + pw.map(function(m){
+      return '<li>' + coverImg(m.poster, m.title, "sm") + '<span class="mt">' + esc(m.title) + '<small>' + (m.type === "series" ? nextEp(m) : "Movie") + '</small></span></li>';
+    }).join("") + '</ul></div>';
+  }
+  return h;
+}
+function renderNowMedia(){
+  var t = now(), h = "";
+  var b = listOf(S.me, "books").filter(function(x){ return x.status === "reading"; }).sort(function(a, c){ return c.updatedAt - a.updatedAt; })[0];
+  var m = listOf(S.me, "movies").filter(function(x){ return x.status === "watching"; }).sort(function(a, c){ return c.updatedAt - a.updatedAt; })[0];
+  if (b) h += '<button class="mtile" type="button" data-go="lib" data-libseg="books">' + coverImg(b.cover, b.title, "sm") + '<span style="min-width:0"><span class="eyebrow">Reading</span><b>' + esc(b.title) + '</b><span class="small muted">' + (b.pages ? bookPct(b) + "% · p. " + b.page : "p. " + b.page) + '</span></span></button>';
+  if (m) h += '<button class="mtile" type="button" data-go="lib" data-libseg="watch">' + coverImg(m.poster, m.title, "sm") + '<span style="min-width:0"><span class="eyebrow">Watching</span><b>' + esc(m.title) + '</b><span class="small muted">' + (m.type === "series" ? "Next " + nextEp(m) : "Movie") + '</span></span></button>';
+  $("nowMedia").innerHTML = h;
+  $("nowMedia").hidden = !h;
+}
+
+/* search: free, no keys; works straight from the phone */
+function timedFetch(url, ms){
+  var ctl = window.AbortController ? new AbortController() : null;
+  var t = setTimeout(function(){ if (ctl) ctl.abort(); }, ms || 9000);
+  return fetch(url, ctl ? { signal:ctl.signal } : {}).then(function(r){ clearTimeout(t); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+}
+function searchBooks(q){
+  return timedFetch("https://www.googleapis.com/books/v1/volumes?maxResults=10&printType=books&q=" + encodeURIComponent(q)).then(function(d){
+    var out = (d.items || []).map(function(it){
+      var v = it.volumeInfo || {}, img = v.imageLinks || {};
+      return { title:v.title || "", author:(v.authors || []).join(", "), pages:v.pageCount || 0,
+               cover:String(img.thumbnail || img.smallThumbnail || "").replace(/^http:/, "https:"), year:String(v.publishedDate || "").slice(0, 4) };
+    }).filter(function(x){ return x.title; });
+    if (!out.length) throw new Error("none");
+    return out;
+  }).catch(function(){
+    return timedFetch("https://openlibrary.org/search.json?limit=10&fields=title,author_name,number_of_pages_median,cover_i,first_publish_year&q=" + encodeURIComponent(q)).then(function(d){
+      return (d.docs || []).map(function(x){
+        return { title:x.title || "", author:(x.author_name || []).slice(0, 2).join(", "), pages:x.number_of_pages_median || 0,
+                 cover:x.cover_i ? "https://covers.openlibrary.org/b/id/" + x.cover_i + "-M.jpg" : "", year:String(x.first_publish_year || "") };
+      }).filter(function(x){ return x.title; });
+    });
+  });
+}
+function searchTitles(q){
+  var url = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrlimit=10&prop=pageimages|description&piprop=thumbnail&pithumbsize=300&gsrsearch=" + encodeURIComponent(q);
+  return timedFetch(url).then(function(d){
+    var pages = d.query && d.query.pages ? Object.keys(d.query.pages).map(function(k){ return d.query.pages[k]; }) : [];
+    pages.sort(function(a, b){ return (a.index || 0) - (b.index || 0); });
+    var out = pages.map(function(p){
+      var desc = p.description || "";
+      var isTitle = /film|movie|series|show|sitcom|drama|anime|miniseries|season/i.test(desc);
+      return { title:p.title.replace(/ \((\d{4} )?(film|TV series|miniseries|series)\)$/i, ""), desc:desc, poster:p.thumbnail ? p.thumbnail.source : "",
+               type:/series|show|sitcom|season|anime|miniseries/i.test(desc) ? "series" : "movie", rank:isTitle ? 0 : 1 };
+    });
+    out.sort(function(a, b){ return a.rank - b.rank; });
+    return out;
+  });
+}
+
+function openAdd(kind){
+  lib.results = [];
+  var isB = kind === "books";
+  sheetCtx = { type:"add", kind:kind };
+  openSheet('<h3>' + (isB ? "Add a book" : "Add a movie or series") + '</h3>' +
+    '<div class="row"><input type="text" id="libQ" placeholder="' + (isB ? "Title or author" : "Movie or series name") + '" style="flex:1" enterkeyhint="search"><button class="btn" type="button" id="libSearch">Search</button></div>' +
+    '<label class="field">Add to<select id="libTo">' + (isB ? '<option value="want">Want to read</option><option value="reading">Reading now</option><option value="done">Already finished</option>'
+      : '<option value="list">Watchlist</option><option value="watching">Watching now</option><option value="done">Already watched</option>') + '</select></label>' +
+    '<div id="libResults"></div>' +
+    '<details class="fold" style="box-shadow:none;border:1px solid var(--line)"><summary>Add by hand</summary><div style="display:grid;gap:10px">' +
+    (isB ? '<label class="field">Title<input type="text" id="manT"></label><label class="field">Author<input type="text" id="manA"></label><label class="field">Total pages<input type="number" id="manP" inputmode="numeric"></label>'
+         : '<label class="field">Title<input type="text" id="manT"></label><label class="field">Type<select id="manType"><option value="movie">Movie</option><option value="series">Series</option></select></label>') +
+    '<button class="btn" type="button" id="libManual">Add</button></div></details>' +
+    '<button class="btn ghost" type="button" id="sheetClose">Close</button>', function(){ var q = $("libQ"); if (q) q.focus(); });
+}
+function runSearch(){
+  var q = ($("libQ").value || "").trim(); if (!q) return;
+  var box = $("libResults"); box.innerHTML = '<p class="note">Searching…</p>';
+  (sheetCtx.kind === "books" ? searchBooks(q) : searchTitles(q)).then(function(res){
+    lib.results = res;
+    if (!res.length) { box.innerHTML = '<p class="note">Nothing found. Try fewer words, or add it by hand below.</p>'; return; }
+    box.innerHTML = '<ul class="mlist">' + res.map(function(r, i){
+      var sub = sheetCtx.kind === "books" ? esc(r.author) + (r.pages ? " · " + r.pages + " pages" : "") + (r.year ? " · " + esc(r.year) : "") : esc(r.desc);
+      return '<li>' + coverImg(sheetCtx.kind === "books" ? r.cover : r.poster, r.title, "sm") + '<span class="mt">' + esc(r.title) + '<small>' + sub + '</small></span><button class="pill sm ink" type="button" data-addres="' + i + '">Add</button></li>';
+    }).join("") + '</ul>';
+  }).catch(function(){ box.innerHTML = '<p class="warnbox">Search isn\'t reachable right now. Add it by hand below.</p>'; });
+}
+function addFrom(r, kind, to){
+  var t = now().key;
+  if (kind === "books") {
+    var b = normBook({ id:uid(), title:r.title, author:r.author, pages:r.pages, cover:r.cover, year:r.year, status:to });
+    if (to === "reading") b.started = t;
+    if (to === "done") { b.finished = t; b.page = b.pages; }
+    saveBook(b); fire("Added", b.title);
+    if (to === "reading" && !b.pages) setTimeout(function(){ openBook(b.id); }, 50); else closeSheet();
+  } else {
+    var m = normMovie({ id:uid(), title:r.title, type:r.type, poster:r.poster, desc:r.desc, status:to });
+    if (to === "done") m.watchedOn = t;
+    saveMovie(m); fire("Added", m.title); closeSheet();
+  }
+  lib.seg = kind; if (ui.tab !== "lib") setTab("lib");
+}
+function ratePick(n){
+  var h = '<div class="ratepick">';
+  for (var i = 1; i <= 5; i++) h += '<button type="button" data-rate="' + i + '" class="' + (i <= n ? "on" : "") + '" aria-label="' + i + ' stars">★</button>';
+  return h + '</div>';
+}
+function openBook(id){
+  var b = S.me.books[id]; if (!b) return;
+  sheetCtx = { type:"book", id:id, rating:b.rating };
+  openSheet('<div class="row" style="align-items:flex-start;flex-wrap:nowrap">' + coverImg(b.cover, b.title, "lg") + '<div style="display:grid;gap:4px;min-width:0"><h3>' + esc(b.title) + '</h3><span class="muted">' + esc(b.author) + '</span><span class="small">' + esc(bookLine(b, now().key)) + '</span></div></div>' +
+    '<div class="grid2"><label class="field">Status<select id="bStatus">' + Object.keys(BOOK_STATUS).map(function(k){ return '<option value="' + k + '"' + (b.status === k ? " selected" : "") + '>' + BOOK_STATUS[k] + '</option>'; }).join("") + '</select></label>' +
+    '<label class="field">Total pages<input type="number" id="bPages" inputmode="numeric" value="' + (b.pages || "") + '"></label>' +
+    '<label class="field">I\'m on page<input type="number" id="bPage" inputmode="numeric" value="' + b.page + '"></label>' +
+    '<label class="field">Title<input type="text" id="bTitle" value="' + esc(b.title) + '"></label></div>' +
+    '<span class="field">Rating</span>' + ratePick(b.rating) +
+    '<label class="field">Notes &amp; favourite lines<textarea id="bNotes" rows="4">' + esc(b.notes) + '</textarea></label>' +
+    '<div class="row"><button class="btn" type="button" id="bSave">Save</button><button class="btn ghost" type="button" id="sheetClose">Close</button><button class="btn warn" type="button" id="bDel" style="margin-left:auto">Delete</button></div>');
+}
+function openMovie(id){
+  var m = S.me.movies[id]; if (!m) return;
+  sheetCtx = { type:"movie", id:id, rating:m.rating };
+  openSheet('<div class="row" style="align-items:flex-start;flex-wrap:nowrap">' + coverImg(m.poster, m.title, "lg") + '<div style="display:grid;gap:4px;min-width:0"><h3>' + esc(m.title) + '</h3><span class="small muted">' + esc(m.desc) + '</span></div></div>' +
+    '<div class="grid2"><label class="field">Status<select id="mStatus">' + Object.keys(MOVIE_STATUS).map(function(k){ return '<option value="' + k + '"' + (m.status === k ? " selected" : "") + '>' + MOVIE_STATUS[k] + '</option>'; }).join("") + '</select></label>' +
+    '<label class="field">Type<select id="mType"><option value="movie"' + (m.type === "movie" ? " selected" : "") + '>Movie</option><option value="series"' + (m.type === "series" ? " selected" : "") + '>Series</option></select></label>' +
+    '<label class="field">Season<input type="number" id="mSeason" inputmode="numeric" min="1" value="' + m.season + '"></label>' +
+    '<label class="field">Next episode<input type="number" id="mEp" inputmode="numeric" min="1" value="' + m.ep + '"></label>' +
+    '<label class="field">Episodes this season<input type="number" id="mEps" inputmode="numeric" min="0" value="' + (m.eps || "") + '" placeholder="Optional"></label>' +
+    '<label class="field">Where to watch<input type="text" id="mPlat" value="' + esc(m.platform) + '" placeholder="Netflix, Prime, Hotstar…"></label></div>' +
+    '<label class="chk"><input type="checkbox" id="mTogether"' + (m.together ? " checked" : "") + '> Watch together (shows on your partner\'s list)</label>' +
+    '<span class="field">Rating</span>' + ratePick(m.rating) +
+    '<label class="field">Notes<textarea id="mNotes" rows="3">' + esc(m.notes) + '</textarea></label>' +
+    '<div class="row"><button class="btn" type="button" id="mSave">Save</button><button class="btn ghost" type="button" id="sheetClose">Close</button><button class="btn warn" type="button" id="mDel" style="margin-left:auto">Delete</button></div>');
+}
+function openLog(id){
+  var b = S.me.books[id]; if (!b) return;
+  sheetCtx = { type:"log", id:id };
+  openSheet('<h3>Log pages</h3><span class="muted">' + esc(b.title) + '</span>' +
+    '<label class="field">I\'m now on page' + (b.pages ? " (of " + b.pages + ")" : "") + '<input type="number" id="logPage" inputmode="numeric" value="' + b.page + '"></label>' +
+    '<div class="row"><button class="pill sm" type="button" data-plus="5">+5</button><button class="pill sm" type="button" data-plus="10">+10</button><button class="pill sm" type="button" data-plus="20">+20</button><button class="pill sm" type="button" data-plus="30">+30</button></div>' +
+    '<div class="row"><button class="btn" type="button" id="logSave">Save</button><button class="btn ghost" type="button" id="sheetClose">Close</button></div>', function(){ var el = $("logPage"); if (el) el.select(); });
+}
+function setBookPage(b, page){
+  var t = now().key;
+  page = Math.max(0, Math.round(page));
+  if (b.pages) page = Math.min(page, b.pages);
+  var delta = page - b.page;
+  b = normBook(b);
+  if (delta > 0) {
+    var s = b.sessions.filter(function(x){ return x.d === t; })[0];
+    if (s) s.p += delta; else b.sessions.push({ d:t, p:delta });
+    b.sessions = b.sessions.slice(-120);
+    mutateDay(t, function(r){ r.readPages = (r.readPages || 0) + delta; });
+  }
+  b.page = page;
+  if (!b.started && page > 0) b.started = t;
+  if (b.status === "want" && page > 0) b.status = "reading";
+  var finished = b.pages && page >= b.pages && b.status !== "done";
+  if (finished) { b.status = "done"; b.finished = t; }
+  saveBook(b);
+  return { delta:delta, finished:finished };
+}
+function libClick(e){
+  var el;
+  if ((el = e.target.closest("[data-libseg]"))) { lib.seg = el.getAttribute("data-libseg"); if (el.hasAttribute("data-go")) return false; renderView(); return true; }
+  if ((el = e.target.closest("[data-libadd]"))) { openAdd(el.getAttribute("data-libadd")); return true; }
+  if ((el = e.target.closest("[data-logpages]"))) { openLog(el.getAttribute("data-logpages")); return true; }
+  if ((el = e.target.closest("[data-bstart]"))) {
+    var b = normBook(S.me.books[el.getAttribute("data-bstart")]); b.status = "reading"; if (!b.started) b.started = now().key; saveBook(b); fire("Reading", b.title); return true;
+  }
+  if ((el = e.target.closest("[data-ep]"))) {
+    var m = normMovie(S.me.movies[el.getAttribute("data-ep")]), was = nextEp(m);
+    if (m.eps && m.ep >= m.eps) { m.season += 1; m.ep = 1; } else m.ep += 1;
+    saveMovie(m); fire("Watched " + was, "Next up: " + nextEp(m), { action:{ label:"Undo", fn:function(){ var x = normMovie(S.me.movies[m.id]); if (x.ep > 1) x.ep -= 1; else if (x.season > 1) { x.season -= 1; x.ep = x.eps || 1; } saveMovie(x); } } });
+    return true;
+  }
+  if ((el = e.target.closest("[data-mdone]"))) { var md = normMovie(S.me.movies[el.getAttribute("data-mdone")]); md.status = "done"; md.watchedOn = now().key; saveMovie(md); openMovie(md.id); return true; }
+  if ((el = e.target.closest("[data-mstart]"))) { var ms = normMovie(S.me.movies[el.getAttribute("data-mstart")]); ms.status = "watching"; saveMovie(ms); fire("Watching", ms.title); return true; }
+  if ((el = e.target.closest("[data-copymovie]"))) {
+    var src = S.buddy.movies[el.getAttribute("data-copymovie")];
+    if (src) { var cp = normMovie(Object.assign({}, src, { id:uid(), status:"list", rating:0, notes:"", together:true, season:1, ep:1, watchedOn:"" })); saveMovie(cp); fire("Added to your watchlist", cp.title); }
+    return true;
+  }
+  if ((el = e.target.closest("[data-addres]"))) { var r = lib.results[+el.getAttribute("data-addres")]; if (r) addFrom(r, sheetCtx.kind, $("libTo").value); return true; }
+  if ((el = e.target.closest("[data-rate]"))) {
+    var n = +el.getAttribute("data-rate"); sheetCtx.rating = sheetCtx.rating === n ? 0 : n;
+    Array.prototype.forEach.call(document.querySelectorAll("#sheet [data-rate]"), function(x){ x.classList.toggle("on", +x.getAttribute("data-rate") <= sheetCtx.rating); });
+    return true;
+  }
+  if ((el = e.target.closest("[data-plus]"))) { var lp = $("logPage"); lp.value = (+lp.value || 0) + (+el.getAttribute("data-plus")); return true; }
+  var btn = e.target.closest("button");
+  var id = btn && btn.id;
+  if (id === "libSearch") { runSearch(); return true; }
+  if (id === "libManual") {
+    var title = ($("manT").value || "").trim(); if (!title) { $("manT").focus(); return true; }
+    if (sheetCtx.kind === "books") addFrom({ title:title, author:($("manA").value || "").trim(), pages:+$("manP").value || 0, cover:"" }, "books", $("libTo").value);
+    else addFrom({ title:title, type:$("manType").value, poster:"", desc:"" }, "watch", $("libTo").value);
+    return true;
+  }
+  if (id === "libAdd") { openAdd(lib.seg); return true; }
+  if (id === "logSave") {
+    var lb = S.me.books[sheetCtx.id], res = setBookPage(lb, +$("logPage").value || 0); closeSheet();
+    if (res.finished) { fire("Finished!", lb.title + ". Rate it?", { action:{ label:"Rate", fn:function(){ openBook(lb.id); } } }); }
+    else fire(res.delta > 0 ? "+" + res.delta + " pages" : "Saved", res.delta > 0 ? "Reading streak: " + readStreak() + " day" + (readStreak() === 1 ? "" : "s") : "");
+    return true;
+  }
+  if (id === "bSave") {
+    var bk = normBook(S.me.books[sheetCtx.id]);
+    bk.title = ($("bTitle").value || "").trim() || bk.title; bk.pages = Math.max(0, +$("bPages").value || 0);
+    bk.rating = sheetCtx.rating || 0; bk.notes = $("bNotes").value;
+    var st = $("bStatus").value, np = +$("bPage").value || 0;
+    S.me.books[bk.id] = bk;
+    if (np !== bk.page) { setBookPage(bk, np); bk = normBook(S.me.books[bk.id]); }
+    if (st !== bk.status) { bk.status = st; if (st === "reading" && !bk.started) bk.started = now().key; if (st === "done") { bk.finished = bk.finished || now().key; if (bk.pages) bk.page = bk.pages; } }
+    saveBook(bk); closeSheet(); fire("Saved", bk.title); return true;
+  }
+  if (id === "mSave") {
+    var mv = normMovie(S.me.movies[sheetCtx.id]), mst = $("mStatus").value;
+    if (mst === "done" && mv.status !== "done") mv.watchedOn = now().key;
+    mv.status = mst; mv.type = $("mType").value; mv.season = +$("mSeason").value || 1; mv.ep = +$("mEp").value || 1; mv.eps = +$("mEps").value || 0;
+    mv.platform = ($("mPlat").value || "").trim(); mv.together = $("mTogether").checked; mv.rating = sheetCtx.rating || 0; mv.notes = $("mNotes").value;
+    saveMovie(mv); closeSheet(); fire("Saved", mv.title); return true;
+  }
+  if (id === "bDel" || id === "mDel") {
+    if (btn.getAttribute("data-armed") !== "1") { btn.setAttribute("data-armed", "1"); btn.textContent = "Tap again"; return true; }
+    if (id === "bDel") { var db = normBook(S.me.books[sheetCtx.id]); db.deleted = true; saveBook(db); }
+    else { var dm = normMovie(S.me.movies[sheetCtx.id]); dm.deleted = true; saveMovie(dm); }
+    closeSheet(); fire("Deleted", ""); return true;
+  }
+  if ((el = e.target.closest("[data-book]")) && !e.target.closest("button")) { openBook(el.getAttribute("data-book")); return true; }
+  if ((el = e.target.closest("[data-movie]")) && !e.target.closest("button")) { openMovie(el.getAttribute("data-movie")); return true; }
+  return false;
+}
+document.addEventListener("keydown", function(e){ if (e.key === "Enter" && e.target && e.target.id === "libQ") { e.preventDefault(); runSearch(); } });
+
+
 /* ---------------- connect / demo / disconnect ---------------- */
 function showConnect(msg){
-  ["today","plan","gym","me","edit"].forEach(function(x){ $("v-" + x).hidden = true; });
+  ["today","plan","gym","lib","me","edit"].forEach(function(x){ $("v-" + x).hidden = true; });
   $("tabbar").hidden = true; $("v-loading").hidden = true; $("v-connect").hidden = false;
   $("connectErr").hidden = !msg; $("connectErr").textContent = msg || "";
 }
 function showLoading(err){
-  ["today","plan","gym","me","edit"].forEach(function(x){ $("v-" + x).hidden = true; });
+  ["today","plan","gym","lib","me","edit"].forEach(function(x){ $("v-" + x).hidden = true; });
   $("v-connect").hidden = true; $("tabbar").hidden = true; $("v-loading").hidden = false;
   $("loadingMsg").textContent = err ? "Couldn't reach your Sharp server: " + err + ". Check your internet, then try again." : "Connecting to your Sharp…";
   $("loadingRetry").hidden = !err;
@@ -1520,6 +1954,16 @@ function startDemo(){
   S.buddy.config = partnerConfig(); S.buddy.profile = normProfile({ name:"Partner", since:C.addDays(t, -9) }, "b");
   for (var j = 9; j >= 1; j--) { var bk = C.addDays(t, -j), br = normDay(null, bk); C.requiredFor(S.buddy.config, bk).forEach(function(id){ br.checks[id] = "on"; }); S.buddy.days[bk] = br; }
   S.cheers = [{ id:"demo1", from:"b", to:"a", text:"Gym time, go!", at:Date.now() }];
+  [["Atomic Habits","James Clear",320,"reading",138],["Aadujeevitham","Benyamin",255,"want",0],["Deep Work","Cal Newport",296,"done",296]].forEach(function(x, i){
+    var bk = normBook({ id:"db" + i, title:x[0], author:x[1], pages:x[2], status:x[3], page:x[4], started:C.addDays(t, -9), finished:x[3] === "done" ? C.addDays(t, -20) : "", rating:x[3] === "done" ? 4 : 0,
+      sessions:x[3] === "reading" ? [{ d:C.addDays(t, -2), p:20 }, { d:C.addDays(t, -1), p:24 }] : [] });
+    S.me.books[bk.id] = bk;
+  });
+  S.me.days[C.addDays(t, -1)].readPages = 24; S.me.days[C.addDays(t, -2)].readPages = 20;
+  [["Kerala Crime Files","series","watching",2,3,"Hotstar"],["Manjummel Boys","movie","done",1,1,"Hotstar"],["The Bear","series","list",1,1,"Hotstar"]].forEach(function(x, i){
+    var mv = normMovie({ id:"dm" + i, title:x[0], type:x[1], status:x[2], season:x[3], ep:x[4], platform:x[5], watchedOn:x[2] === "done" ? C.addDays(t, -5) : "", rating:x[2] === "done" ? 5 : 0, together:i === 2 });
+    S.me.movies[mv.id] = mv;
+  });
   S.bootstrapped = true; saveLocal(); setSync("demo"); renderAll(); showIncomingCheer();
 }
 
@@ -1527,7 +1971,7 @@ function startDemo(){
 document.addEventListener("click", function(e){
   var el;
   if ((el = e.target.closest("#tabbar [data-tab]"))) { setTab(el.getAttribute("data-tab")); return; }
-  if ((el = e.target.closest("[data-go]"))) { setTab(el.getAttribute("data-go")); return; }
+  if ((el = e.target.closest("[data-go]"))) { if (el.hasAttribute("data-libseg")) lib.seg = el.getAttribute("data-libseg"); setTab(el.getAttribute("data-go")); return; }
   if ((el = e.target.closest("[data-mark]"))) { var k = el.getAttribute("data-k"), id = el.getAttribute("data-id"), v = el.getAttribute("data-mark"); mutateDay(k, function(r){ r.checks[id] = v; }); if (v === "on") fire("Nice", "Checked in on time.", {}); return; }
   if ((el = e.target.closest("[data-clear]"))) { var k2 = el.getAttribute("data-k"), id2 = el.getAttribute("data-clear"); mutateDay(k2, function(r){ delete r.checks[id2]; }); return; }
   if ((el = e.target.closest("[data-ping]"))) { var k3 = el.getAttribute("data-k"), id3 = el.getAttribute("data-ping"); mutateDay(k3, function(r){ if (r.pings[id3]) delete r.pings[id3]; else r.pings[id3] = true; }); return; }
@@ -1540,6 +1984,7 @@ document.addEventListener("click", function(e){
     (el.getAttribute("data-del") === "block" ? draft.templates[ui.tpl] : draft.pings[ui.tpl]).splice(+el.getAttribute("data-i"), 1);
     markDirty(); renderEditor(); return;
   }
+  if (libClick(e)) return;
   if ((el = e.target.closest("[data-cheer]"))) { sendCheer(el.getAttribute("data-cheer")); return; }
   var id0 = e.target.closest("button") && e.target.closest("button").id;
   if (!id0) { if (e.target === $("scrim")) closeSheet(); return; }
@@ -1637,6 +2082,9 @@ document.addEventListener("change", function(e){
   if (el.matches("[data-wo-i]")) { var i = el.getAttribute("data-wo-i"), c = el.checked; mutateDay(t.key, function(r){ if (c) r.wo.done[i] = true; else delete r.wo.done[i]; }); return; }
   if (el.id === "meNightly") saveProfile(function(p){ p.nightly = el.checked; });
   if (el.id === "meShareWeight") saveProfile(function(p){ p.shareWeight = el.checked; });
+  if (el.id === "meShareBooks") saveProfile(function(p){ p.shareBooks = el.checked; });
+  if (el.id === "meShareMovies") saveProfile(function(p){ p.shareMovies = el.checked; });
+  if (el.id === "meGoal") { var g = Math.round(+el.value); if (g > 0) saveProfile(function(p){ p.readGoal = g; }); }
   if (el.id === "wDay") saveProfile(function(p){ p.weighDay = +el.value; });
   if (el.id === "devAlerts") { setDev({ alerts:el.checked }); if (el.checked) { unlockAudio(); setTimeout(function(){ chime(); }, 80); } renderLive(); }
   if (el.id === "devAwake") { setDev({ awake:el.checked }); applyAwake(); }

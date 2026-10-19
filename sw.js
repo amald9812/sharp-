@@ -1,6 +1,6 @@
 /* Sharp service worker: keeps the app opening fast and working briefly offline.
    Pages: network first (so updates arrive), cached copy when offline. */
-var CACHE = 'sharp-v4-1';
+var CACHE = 'sharp-v5-1';
 var SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
