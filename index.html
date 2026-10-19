@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sharp</title>
+<meta name="theme-color" content="#FFFFFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Sharp">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Sharp — minimal, soft, light. One app column; white top band continues the system status bar.
+   Tokens: ink on white cards over a pale cool page, one yellow accent ("on the dot"). */
+:root{
+  --page:#F3F4F7; --card:#FFFFFF; --soft:#F0F2F5; --ink:#111318; --ink-2:#2A2E36; --muted:#687084; --line:#E5E7EC;
+  --signal:#F4C21B; --go:#138A4E; --go-soft:#E3F3EA; --stop:#C2352B; --stop-soft:#FBE7E5; --ice:#3B7DD8; --ice-soft:#E6EFFB;
+  --water:#2F7DC0;
+  --shadow:0 1px 2px rgba(17,19,24,.04), 0 12px 32px -14px rgba(17,19,24,.16);
+  --r:22px; --r-s:14px;
+  --f-display:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --gut:max(18px, env(safe-area-inset-left, 0px));
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--card);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;min-height:100vh;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+[hidden]{display:none!important}
+.num{font-family:var(--f-display);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.col{max-width:600px;margin:0 auto;padding-left:var(--gut);padding-right:max(18px, env(safe-area-inset-right, 0px))}
+
+/* Top band */
+.top{background:var(--card);padding-top:env(safe-area-inset-top, 0px)}
+.top .col{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-top:18px;padding-bottom:16px}
+@media (pointer:coarse){.top .col{padding-top:22px}}
+.word{display:inline-grid;gap:7px}
+.word b{font-family:var(--f-display);font-weight:700;font-size:30px;line-height:.85;letter-spacing:.14em;text-transform:uppercase;padding-left:.02em}
+.dayline{height:3px;border-radius:3px;background:var(--soft);overflow:hidden}
+.dayline i{display:block;height:100%;width:0;background:var(--signal);border-radius:3px;transition:width 1s linear}
+.clockmini{text-align:right;line-height:1.1}
+.clockmini .t{font-family:var(--f-display);font-weight:700;font-size:26px;font-variant-numeric:tabular-nums}
+.clockmini .t small{font-size:13px;color:var(--muted);margin-left:3px;letter-spacing:.04em}
+.clockmini .d{font-size:12.5px;color:var(--muted);font-weight:500}
+.sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--go);margin-right:5px;vertical-align:1px}
+.sync-dot.busy{background:var(--signal)} .sync-dot.off{background:var(--stop)}
+
+main{padding-top:14px}
+.view{display:grid;gap:14px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:18px}
+.eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:13.5px}
+.h2{margin:0;font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.02em;text-transform:uppercase;line-height:1}
+
+/* Hero ring */
+.hero{display:grid;justify-items:center;gap:12px;padding:22px 18px 18px}
+.ring{position:relative;width:min(270px, 72vw);aspect-ratio:1;max-width:100%}
+.ring svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}
+.ring .track{stroke:var(--soft)}
+.ring .prog{stroke:var(--ink);transition:stroke-dashoffset 1s linear}
+.ring .center{position:absolute;inset:16%;display:grid;place-content:center;text-align:center;gap:2px}
+.ring .center h1{margin:2px 0 0;font-family:var(--f-display);font-weight:700;font-size:21px;line-height:1.05;text-transform:uppercase;letter-spacing:.02em;text-wrap:balance}
+.ring .left{font-family:var(--f-display);font-weight:700;font-size:46px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ring .left.long{font-size:36px}
+.ring .until{font-size:12.5px;color:var(--muted)}
+.next{font-size:14.5px;color:var(--muted);text-align:center}
+.next b{color:var(--ink);font-weight:600}
+.checkin{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;font-weight:600}
+.pill{border:0;border-radius:999px;padding:10px 18px;font-weight:700;font-size:15px;background:var(--soft);color:var(--ink)}
+.pill.ink{background:var(--ink);color:#fff}
+.pill.go{background:var(--go);color:#fff}
+.pill.stop{background:var(--stop-soft);color:var(--stop)}
+.pill.sm{padding:7px 13px;font-size:13.5px}
+
+/* Streak + buddy */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tile{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;border:0;text-align:left;display:grid;gap:6px;align-content:start;min-width:0}
+.big{font-family:var(--f-display);font-weight:700;font-size:44px;line-height:.9;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700;background:var(--soft);white-space:nowrap}
+.chip.gold{background:#FDF3CF;color:#7A5B00} .chip.ice{background:var(--ice-soft);color:var(--ice)} .chip.stop{background:var(--stop-soft);color:var(--stop)} .chip.go{background:var(--go-soft);color:var(--go)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:700;flex:none}
+.buddy-top{display:flex;align-items:center;gap:10px;min-width:0}
+.buddy-top b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Quick actions */
+.quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.qa{border:0;background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:14px 12px;display:grid;gap:3px;text-align:left;min-width:0}
+.qa .v{font-family:var(--f-display);font-weight:700;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.qa .l{font-size:13px;color:var(--muted);font-weight:600}
+.qa.done .v{color:var(--go)}
+
+/* Lists */
+.plan{list-style:none;margin:0;padding:0}
+.plan li{display:grid;grid-template-columns:74px 1fr auto;gap:10px;align-items:center;padding:11px 2px;border-top:1px solid var(--line)}
+.plan li:first-child{border-top:0}
+.plan .tm{font-size:13.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.plan .tt{font-weight:600;min-width:0}
+.plan .tt small{display:block;font-weight:500;color:var(--muted);font-size:13px;margin-top:2px}
+.plan li.past .tt,.plan li.past .tm{color:#A3A9B6}
+.plan li.now{background:linear-gradient(90deg, #FFF7DA, rgba(255,247,218,0));border-radius:12px;padding-left:8px;margin:0 -6px;border-top-color:transparent}
+.plan li.now + li{border-top-color:transparent}
+.plan li.ping .tt{font-weight:500;font-size:14px;color:var(--muted)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dot.on{background:var(--go)} .dot.late{background:var(--stop)} .dot.now{background:var(--signal)}
+.plan .acts{display:flex;gap:6px;margin-top:8px}
+.plan .mk{display:flex;justify-content:flex-end}
+.seg{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{border:0;background:var(--card);box-shadow:var(--shadow);border-radius:999px;padding:8px 14px;font-weight:600;font-size:14px;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+details.fold{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow)}
+details.fold > summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;font-weight:700}
+details.fold > summary::-webkit-details-marker{display:none}
+details.fold > summary span{font-weight:600;color:var(--muted);font-size:14px}
+details.fold > div{padding:0 18px 16px}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.checks label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.checks input[type="checkbox"]{width:20px;height:20px;margin:1px 0 0;accent-color:var(--go);flex:none}
+.checks .done span{text-decoration:line-through;color:var(--muted)}
+.top3 li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;align-items:center}
+input[type="text"],input[type="email"],input[type="number"],input[type="time"],input[type="date"],select,textarea{width:100%;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);font-size:16px}
+textarea{resize:vertical}
+.btn{border:0;border-radius:var(--r-s);padding:12px 16px;font-weight:700;background:var(--ink);color:#fff;font-size:15px}
+.btn.ghost{background:var(--soft);color:var(--ink)}
+.btn.warn{background:var(--stop-soft);color:var(--stop)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:grid;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.field input,.field select,.field textarea{color:var(--ink);font-weight:500}
+.switch{display:flex;gap:10px;align-items:center;justify-content:space-between;font-weight:600}
+.switch input{width:22px;height:22px;accent-color:var(--go)}
+.note{margin:0;font-size:13.5px;color:var(--muted)}
+.warnbox{margin:0;padding:10px 12px;border-radius:12px;background:var(--stop-soft);color:var(--stop);font-size:13.5px;font-weight:600}
+.infobox{margin:0;padding:10px 12px;border-radius:12px;background:var(--soft);font-size:13.5px;color:var(--muted)}
+.banner{display:flex;gap:12px;align-items:center;background:var(--ink);color:#fff;border-radius:var(--r);padding:14px 16px}
+.banner .x{margin-left:auto}
+.banner .x button{background:rgba(255,255,255,.14);color:#fff}
+
+/* Streak history */
+.hist{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:5px}
+.hist i{aspect-ratio:1;border-radius:5px;background:var(--soft)}
+.hist i.clean{background:var(--go)} .hist i.frozen{background:var(--ice)} .hist i.miss{background:var(--stop)} .hist i.pause{background:#C9CDD6} .hist i.today{outline:2px solid var(--ink);outline-offset:1px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:0;background:var(--c)}
+.lvbar{height:8px;border-radius:8px;background:var(--soft);overflow:hidden}
+.lvbar i{display:block;height:100%;background:var(--signal)}
+.freezes{display:flex;gap:6px}
+.freezes i{width:22px;height:22px;border-radius:7px;background:var(--soft);border:1.5px dashed #C9CDD6}
+.freezes i.have{background:var(--ice-soft);border:1.5px solid var(--ice)}
+
+/* Workout */
+.wo-title{margin:0;font-family:var(--f-display);font-size:40px;line-height:.95;text-transform:uppercase}
+.wo-list{list-style:none;margin:0;padding:0}
+.wo-list li{border-top:1px solid var(--line)} .wo-list li:first-child{border-top:0}
+.wo-list label{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 0;cursor:pointer}
+.wo-list input{width:20px;height:20px;margin:0;accent-color:var(--go)}
+.wo-list b{font-size:13.5px;font-weight:700;white-space:nowrap;color:var(--ink-2)}
+.wo-list .done span{text-decoration:line-through;color:var(--muted)}
+.box{padding:12px 14px;background:var(--soft);border-radius:14px;font-size:14.5px}
+.guide{margin:0;padding-left:18px;display:grid;gap:7px;font-size:14.5px}
+.week{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.week li{display:grid;grid-template-columns:44px 1fr;gap:8px;font-size:14.5px}
+
+/* Weight chart */
+.chart{width:100%;height:auto;display:block}
+
+/* Editor */
+.ed{border:1px solid var(--line);border-radius:16px;background:var(--card)}
+.ed + .ed{margin-top:8px}
+.ed summary{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 14px;cursor:pointer;list-style:none}
+.ed summary::-webkit-details-marker{display:none}
+.ed summary .a{font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ed summary .b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ed summary::after{content:"Edit";font-size:12.5px;font-weight:700;color:var(--muted)}
+.ed[open] summary::after{content:"Close"}
+.ed-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:2px 14px 14px}
+.ed-grid .wide{grid-column:1 / -1}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink)}
+.chk input{width:20px;height:20px;margin:0;accent-color:var(--go)}
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--ink);color:#fff;
+  padding:12px max(18px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) var(--gut)}
+.savebar .col{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0}
+.savebar .btn{background:var(--signal);color:var(--ink)}
+.savebar .btn.ghost{background:rgba(255,255,255,.12);color:#fff}
+
+/* Tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.94);-webkit-backdrop-filter:saturate(180%) blur(16px);backdrop-filter:saturate(180%) blur(16px);
+  border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom, 0px)}
+.tabbar .col{display:grid;grid-template-columns:repeat(4,1fr);padding-top:6px;padding-bottom:6px}
+.tabbar button{border:0;background:none;display:grid;justify-items:center;gap:2px;padding:6px 0;font-size:11.5px;font-weight:700;color:#9AA1AE;letter-spacing:.02em}
+.tabbar svg{width:24px;height:24px}
+.tabbar button[aria-selected="true"]{color:var(--ink)}
+
+/* Sheet + toast */
+.scrim{position:fixed;inset:0;background:rgba(17,19,24,.35);z-index:50;display:grid;align-items:end}
+.sheet{background:var(--card);border-radius:24px 24px 0 0;padding:20px var(--gut) calc(22px + env(safe-area-inset-bottom, 0px));display:grid;gap:14px;max-height:88vh;overflow:auto;width:100%;max-width:600px;margin:0 auto}
+.sheet h3{margin:0;font-family:var(--f-display);font-size:24px;text-transform:uppercase;letter-spacing:.02em}
+.toast{position:fixed;z-index:60;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top, 0px));width:min(460px, calc(100% - 28px));
+  background:var(--ink);color:#fff;border-radius:18px;padding:13px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 14px 34px rgba(0,0,0,.25)}
+.toast .tx{flex:1;min-width:0}
+.toast .tx b{display:block;font-family:var(--f-display);font-size:21px;text-transform:uppercase;line-height:1.05;letter-spacing:.02em}
+.toast .tx span{font-size:13.5px;opacity:.85}
+.toast button{border:0;border-radius:10px;padding:8px 11px;font-weight:700;background:rgba(255,255,255,.14);color:#fff;white-space:nowrap}
+.toast button.primary{background:var(--signal);color:var(--ink)}
+
+/* Connect */
+.connect{min-height:80vh;display:grid;place-items:center}
+.connect .card{display:grid;gap:14px;width:100%}
+@media (prefers-reduced-motion: reduce){.ring .prog,.dayline i{transition:none}}
+@media (max-width:380px){.quick .qa .v{font-size:22px}.big{font-size:38px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="col">
+    <div class="word" aria-label="Sharp">
+      <b>Sharp</b>
+      <div class="dayline" title="How much of your day has passed"><i id="dayFill"></i></div>
+    </div>
+    <div class="clockmini">
+      <div class="t" id="clock">--:--</div>
+      <div class="d"><span class="sync-dot" id="syncDot"></span><span id="dateMini"></span></div>
+    </div>
+  </div>
+</header>
+
+<main class="col" id="main">
+  <!-- CONNECT -->
+  <section id="v-connect" class="view connect" hidden>
+    <div class="card">
+      <span class="eyebrow">Welcome</span>
+      <h2 class="h2">Connect this device</h2>
+      <p class="note">Paste your personal Sharp link. You'll find it in the <b>Links</b> tab of your <b>Sharp data</b> Google Sheet.</p>
+      <textarea id="connectInput" rows="3" placeholder="https://…github.io/sharp/#connect=…"></textarea>
+      <p class="warnbox" id="connectErr" hidden></p>
+      <button class="btn" id="connectBtn" type="button">Connect</button>
+      <button class="btn ghost" id="demoBtn" type="button">Look around first (demo)</button>
+    </div>
+  </section>
+
+  <!-- LOADING -->
+  <section id="v-loading" class="view connect" hidden>
+    <div class="card">
+      <span class="eyebrow">Sharp</span>
+      <p id="loadingMsg" style="margin:0;font-weight:600">Connecting to your Sharp…</p>
+      <button class="btn" id="loadingRetry" type="button" hidden>Try again</button>
+      <button class="btn ghost" id="loadingReset" type="button">Use a different link</button>
+    </div>
+  </section>
+
+  <!-- TODAY -->
+  <section id="v-today" class="view" hidden>
+    <div id="cheerBanner"></div>
+    <div id="nameCard"></div>
+    <div class="card hero">
+      <div class="ring">
+        <svg viewBox="0 0 240 240" aria-hidden="true">
+          <circle class="track" cx="120" cy="120" r="104" fill="none" stroke-width="14"/>
+          <circle class="prog" id="ringProg" cx="120" cy="120" r="104" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="653.45" stroke-dashoffset="653.45"/>
+          <circle id="ringHead" cx="224" cy="120" r="9" fill="#F4C21B" stroke="#FFFFFF" stroke-width="3"/>
+        </svg>
+        <div class="center">
+          <span class="eyebrow" id="nowLabel">Now</span>
+          <h1 id="nowTitle">Loading</h1>
+          <div class="left" id="nowLeft">--</div>
+          <span class="until" id="nowUntil"></span>
+        </div>
+      </div>
+      <div class="next" id="nextLine"></div>
+      <div class="checkin" id="checkin" hidden></div>
+    </div>
+    <div class="duo">
+      <button class="tile" type="button" id="streakTile" data-go="me"></button>
+      <div class="tile" id="buddyTile"></div>
+    </div>
+    <div class="quick" id="quick"></div>
+    <details class="fold" id="foldTop3"><summary>Top 3 priorities <span id="top3Count"></span></summary><div><ol class="checks top3" id="top3"></ol></div></details>
+    <details class="fold" id="foldHabits"><summary>Habits <span id="habitCount"></span></summary><div><ul class="checks" id="habits"></ul></div></details>
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><span class="eyebrow">Today</span><button class="pill sm" type="button" data-go="plan">Full plan</button></div>
+      <ul class="plan" id="todayPlan"></ul>
+    </div>
+  </section>
+
+  <!-- PLAN -->
+  <section id="v-plan" class="view" hidden>
+    <div class="row" style="justify-content:space-between"><h2 class="h2" id="planTitle">Plan</h2><button class="btn" type="button" id="editBtn">Edit</button></div>
+    <div class="seg" id="planDays"></div>
+    <div class="card"><ul class="plan" id="planList"></ul></div>
+    <div class="card" style="display:grid;gap:10px">
+      <span class="eyebrow">Calendar alerts · iPhone, Watch, Mac, Android</span>
+      <p class="note" id="calStatus"></p>
+      <div class="row"><button class="btn" type="button" id="calSync">Update calendar</button><button class="btn ghost" type="button" id="calClear">Remove events</button></div>
+    </div>
+  </section>
+
+  <!-- EDIT -->
+  <section id="v-edit" class="view" hidden>
+    <div class="row" style="justify-content:space-between"><h2 class="h2">Edit</h2><button class="pill sm" type="button" data-go="plan">Back to plan</button></div>
+    <p class="infobox">Changes stay here until you tap <b>Save</b>. Then tap <b>Update calendar</b> on the Plan screen so your alerts match.</p>
+    <div class="card" style="display:grid;gap:10px">
+      <span class="eyebrow">Timetable</span>
+      <div class="seg" id="tplSeg"></div>
+      <div id="edWarn" style="display:grid;gap:6px"></div>
+      <div id="edBlocks"></div>
+      <div class="row">
+        <button class="btn" type="button" id="addBlock">Add block</button>
+        <select id="copyFrom" style="width:auto"><option value="">Copy plan from…</option><option value="weekday">Mon–Fri</option><option value="saturday">Saturday</option><option value="sunday">Sunday</option></select>
+      </div>
+    </div>
+    <div class="card" style="display:grid;gap:10px">
+      <span class="eyebrow">Snacks &amp; reminders · <span id="pingTplLbl"></span></span>
+      <div id="edPings"></div>
+      <div class="row"><button class="btn" type="button" id="addPing">Add reminder</button></div>
+    </div>
+    <div class="card" style="display:grid;gap:10px">
+      <span class="eyebrow">Water</span>
+      <label class="chk"><input type="checkbox" data-path="water.on" data-type="bool"> Remind me to drink water</label>
+      <div class="grid2">
+        <label class="field">From<input type="time" data-path="water.from"></label>
+        <label class="field">Until<input type="time" data-path="water.to"></label>
+        <label class="field">Every<select data-path="water.every" data-type="num"><option value="30">30 min</option><option value="45">45 min</option><option value="60">60 min</option><option value="90">90 min</option><option value="120">2 hours</option></select></label>
+        <label class="field">Glass (ml)<input type="number" min="100" max="1000" step="50" data-path="water.ml" data-type="num"></label>
+      </div>
+      <label class="chk"><input type="checkbox" data-path="water.calendar" data-type="bool"> Water reminders in my calendar (separate calendar)</label>
+      <p class="note" id="waterSummary"></p>
+    </div>
+    <div class="card" style="display:grid;gap:10px">
+      <span class="eyebrow">Workouts</span>
+      <div class="seg" id="woEdSeg"></div>
+      <div class="grid2" id="woEd">
+        <label class="field">Name<input type="text" data-wo="title"></label>
+        <label class="field">Focus<input type="text" data-wo="focus"></label>
+        <label class="field" style="grid-column:1/-1">Warm-up<textarea rows="2" data-wo="warmup"></textarea></label>
+        <label class="field" style="grid-column:1/-1">Exercises, one per line: Exercise | sets × reps<textarea rows="8" data-wo="items"></textarea></label>
+        <label class="field" style="grid-column:1/-1">Finish<textarea rows="2" data-wo="finisher"></textarea></label>
+      </div>
+    </div>
+    <div class="card" style="display:grid;gap:10px">
+      <span class="eyebrow">Habits, one per line</span>
+      <textarea id="habitsEd" rows="6"></textarea>
+    </div>
+    <div class="card" style="display:grid;gap:10px">
+      <span class="eyebrow">General</span>
+      <div class="grid2">
+        <label class="field">Gym starts on<input type="date" data-path="gymStart"></label>
+        <label class="field">Clock<select data-path="clock12" data-type="bool"><option value="true">12-hour</option><option value="false">24-hour</option></select></label>
+      </div>
+      <p class="note">Before the gym start date, gym blocks show a morning walk instead.</p>
+    </div>
+    <div class="card" style="display:grid;gap:10px">
+      <span class="eyebrow">Backup</span>
+      <textarea id="backupBox" rows="3" placeholder="Tap Export for a copy of your plan, or paste one and tap Load."></textarea>
+      <div class="row"><button class="btn ghost" type="button" id="exportBtn">Export</button><button class="btn ghost" type="button" id="importBtn">Load</button><button class="btn warn" type="button" id="resetBtn">Reset to sample plan</button></div>
+      <p class="note" id="backupMsg"></p>
+    </div>
+  </section>
+
+  <!-- GYM -->
+  <section id="v-gym" class="view" hidden>
+    <div class="row" style="justify-content:space-between"><h2 class="h2">Gym</h2><span class="chip go" id="gymStreakChip"></span></div>
+    <div class="seg" id="woDays"></div>
+    <div class="card" id="woCard" style="display:grid;gap:12px"></div>
+    <div class="card" style="display:grid;gap:10px"><span class="eyebrow">This week</span><ul class="week" id="woWeek"></ul></div>
+    <div class="card" style="display:grid;gap:10px">
+      <span class="eyebrow">How to progress</span>
+      <ul class="guide">
+        <li>Weeks 1–2: learn the moves with light weights. End each set with 3–4 reps left in the tank.</li>
+        <li>Then, when you hit the top of the rep range on every set, add 2.5 kg (upper body) or 5 kg (legs).</li>
+        <li>Rest 2–3 min after the first lift, 60–90 s after the others.</li>
+        <li>Every 6th week, do the same plan with about half the sets to recover.</li>
+        <li>Ask a trainer to check your squat, deadlift and bench form in week one.</li>
+        <li>Sore muscles are normal. Sharp joint pain means stop that exercise.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ME -->
+  <section id="v-me" class="view" hidden>
+    <div class="card" style="display:grid;gap:14px" id="streakCard"></div>
+    <div class="card" style="display:grid;gap:12px" id="pauseCard"></div>
+    <div class="card" style="display:grid;gap:12px" id="weightCard"></div>
+    <div class="card" style="display:grid;gap:12px">
+      <span class="eyebrow">You</span>
+      <label class="field">Name<input type="text" id="meName" maxlength="40"></label>
+      <label class="field">Email for the nightly summary<input type="email" id="meEmail" placeholder="you@gmail.com"></label>
+      <label class="switch">Email me a summary of us both at 10:15 PM<input type="checkbox" id="meNightly"></label>
+      <label class="switch">Show my weight to my partner<input type="checkbox" id="meShareWeight"></label>
+    </div>
+    <div class="card" style="display:grid;gap:12px">
+      <span class="eyebrow">This device</span>
+      <label class="switch">Sound alerts while Sharp is open<input type="checkbox" id="devAlerts"></label>
+      <label class="switch">Keep screen awake<input type="checkbox" id="devAwake"></label>
+      <p class="note" id="devHint"></p>
+      <p class="note" id="syncLbl"></p>
+      <div class="row"><button class="btn ghost" type="button" id="syncNow">Sync now</button><button class="btn warn" type="button" id="disconnectBtn">Disconnect</button></div>
+    </div>
+  </section>
+</main>
+
+<nav class="tabbar" id="tabbar" hidden>
+  <div class="col" role="tablist">
+    <button type="button" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg>Today</button>
+    <button type="button" data-tab="plan" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="17.5" r="1" fill="currentColor"/></svg>Plan</button>
+    <button type="button" data-tab="gym" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>Gym</button>
+    <button type="button" data-tab="me" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.3 7.5-5.3s6.3 1.7 7.5 5.3"/></svg>Me</button>
+  </div>
+</nav>
+
+<div class="savebar" id="saveBar" hidden><div class="col"><span>Unsaved changes</span><div class="row"><button class="btn ghost" type="button" id="discardBtn">Discard</button><button class="btn" type="button" id="saveBtn">Save</button></div></div></div>
+<div class="toast" id="toast" role="alert" hidden><div class="tx"><b id="toastTitle"></b><span id="toastSub"></span></div><button type="button" class="primary" id="toastAct" hidden></button><button type="button" id="toastClose">OK</button></div>
+<div class="scrim" id="scrim" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+
+<script>
+/* ===== SHARED: identical copy lives in the app (index.html) and the server (Code.gs) ===== */
+var SharpCore = (function () {
+  'use strict';
+  var DAY_MS = 86400000;
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function dateOfKey(k) { return new Date(k + 'T00:00:00Z'); }
+  function keyOfUTC(d) { return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); }
+  function addDays(k, n) { return keyOfUTC(new Date(dateOfKey(k).getTime() + n * DAY_MS)); }
+  function wdOf(k) { return dateOfKey(k).getUTCDay(); }
+  function tplOf(k) { var w = wdOf(k); return w === 0 ? 'sunday' : (w === 6 ? 'saturday' : 'weekday'); }
+  function istKey(ms) { return keyOfUTC(new Date((ms == null ? Date.now() : ms) + 330 * 60000)); }
+
+  /** Tracked block ids for a day (the check-ins that decide the streak). */
+  function requiredFor(cfg, k) {
+    var list = (cfg && cfg.templates && cfg.templates[tplOf(k)]) || [];
+    var out = [];
+    for (var i = 0; i < list.length; i++) if (list[i].track) out.push(list[i].id);
+    return out;
+  }
+  function pauseFor(profile, k) {
+    var ps = (profile && profile.pauses) || [];
+    for (var i = 0; i < ps.length; i++) {
+      if (k >= ps[i].from && (!ps[i].to || k <= ps[i].to)) return ps[i];
+    }
+    return null;
+  }
+  /** 'pause' | 'clean' | 'miss' | 'open' (no record and nothing required) */
+  function dayStatus(cfg, profile, days, k) {
+    if (pauseFor(profile, k)) return 'pause';
+    var r = days[k];
+    var req = r && r.req && r.req.length ? r.req : requiredFor(cfg, k);
+    if (!req.length) return 'clean';
+    if (!r || !r.checks) return 'miss';
+    for (var i = 0; i < req.length; i++) if (r.checks[req[i]] !== 'on') return 'miss';
+    return 'clean';
+  }
+  var LEVELS = [
+    { n: 0, name: 'Starter' }, { n: 7, name: 'Bronze' }, { n: 21, name: 'Silver' },
+    { n: 66, name: 'Gold' }, { n: 100, name: 'Platinum' }, { n: 200, name: 'Diamond' }
+  ];
+  function level(n) {
+    var cur = LEVELS[0], next = null;
+    for (var i = 0; i < LEVELS.length; i++) { if (n >= LEVELS[i].n) cur = LEVELS[i]; else { next = LEVELS[i]; break; } }
+    return { name: cur.name, at: cur.n, next: next ? next.name : null, nextAt: next ? next.n : null };
+  }
+  /**
+   * Walks every day from the streak start to yesterday.
+   * Clean day: +1. Every 7th clean day earns a freeze (they carry forward, up to the cap).
+   * Missed day: a freeze is used if one is banked, otherwise the streak resets.
+   * Paused day: nothing changes.
+   */
+  function streak(cfg, profile, days, todayKey) {
+    var start = (profile && profile.since) || todayKey;
+    var cap = (profile && profile.freezeCap) || 5;
+    var s = 0, best = 0, freezes = 0, cleanTotal = 0, used = 0, log = [];
+    var k = start, guard = 0;
+    while (k < todayKey && guard < 4000) {
+      var st = dayStatus(cfg, profile, days, k);
+      if (st === 'clean') {
+        s++; cleanTotal++;
+        if (cleanTotal % 7 === 0 && freezes < cap) freezes++;
+      } else if (st === 'miss') {
+        if (freezes > 0) { freezes--; used++; st = 'frozen'; } else { s = 0; }
+      }
+      if (s > best) best = s;
+      log.push({ k: k, st: st });
+      k = addDays(k, 1); guard++;
+    }
+    var today = dayStatus(cfg, profile, days, todayKey);
+    var current = s + (today === 'clean' ? 1 : 0);
+    if (current > best) best = current;
+    var lv = level(current);
+    return { current: current, best: best, freezes: freezes, cap: cap, used: used, today: today,
+      level: lv, paused: pauseFor(profile, todayKey), log: log.slice(-27), cleanTotal: cleanTotal };
+  }
+  /** Consecutive gym days ticked on time, skipping days without a gym block and paused days. */
+  function gymStreak(cfg, profile, days, todayKey) {
+    var n = 0, k = todayKey, first = true, guard = 0;
+    while (guard < 400) {
+      var list = (cfg.templates[tplOf(k)] || []).filter(function (b) { return b.kind === 'gym' && b.track; });
+      if (list.length && !pauseFor(profile, k) && !(cfg.gymStart && k < cfg.gymStart)) {
+        var r = days[k], ok = r && r.checks && r.checks[list[0].id] === 'on';
+        if (ok) n++;
+        else if (!first) break;
+      }
+      if (profile && profile.since && k <= profile.since) break;
+      first = false; k = addDays(k, -1); guard++;
+    }
+    return n;
+  }
+  /** Days in a row both of you kept your streak (frozen and paused days don't break it). */
+  function coupleStreak(a, b, todayKey) {
+    var la = {}, lb = {}, i;
+    for (i = 0; i < a.log.length; i++) la[a.log[i].k] = a.log[i].st;
+    for (i = 0; i < b.log.length; i++) lb[b.log[i].k] = b.log[i].st;
+    var n = (a.today === 'clean' && b.today === 'clean') ? 1 : 0;
+    var k = addDays(todayKey, -1);
+    for (i = 0; i < 27; i++) {
+      var x = la[k], y = lb[k];
+      if (!x || !y || x === 'miss' || y === 'miss') break;
+      if (x === 'clean' && y === 'clean') n++;
+      k = addDays(k, -1);
+    }
+    return n;
+  }
+  return { pad: pad, dateOfKey: dateOfKey, keyOfUTC: keyOfUTC, addDays: addDays, wdOf: wdOf, tplOf: tplOf,
+    istKey: istKey, requiredFor: requiredFor, pauseFor: pauseFor, dayStatus: dayStatus, level: level,
+    streak: streak, gymStreak: gymStreak, coupleStreak: coupleStreak };
+})();
+/* ===== END SHARED ===== */
+
+</script>
+<script>
+(function () {
+"use strict";
+var C = SharpCore;
+var APP_VERSION = 4;
+var IST = 330;
+var WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+var WDL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var TPLS = ["weekday","saturday","sunday"];
+var TPL_LABEL = { weekday:"Mon–Fri", saturday:"Saturday", sunday:"Sunday" };
+var WEEK_ORDER = [1,2,3,4,5,6,0];
+var KINDS = { routine:"Routine", gym:"Gym", move:"Walk / move", meal:"Meal", focus:"Focus", work:"Work", "break":"Break", plan:"Plan", free:"Free time", screen:"Screen time", sleep:"Sleep" };
+var PING_KINDS = { snack:"Snack (with a tick)", alert:"Reminder", weigh:"Weigh-in" };
+var REMIND = [[-1,"No alert"],[0,"At start"],[5,"5 min before"],[10,"10 min before"],[15,"15 min before"],[30,"30 min before"]];
+var PAUSE_REASONS = ["Sick","Travel","Family emergency","Other"];
+var CHEERS = ["Proud of you!","Gym time, go!","Drink some water","Time to sleep","You've got this"];
+
+/* ---------------- helpers ---------------- */
+function pad(n){ return (n < 10 ? "0" : "") + n; }
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]; }); }
+function uid(){ return "x" + Math.random().toString(36).slice(2, 9); }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function lsGet(k, fb){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch(e){ return fb; } }
+function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function lsDel(k){ try { localStorage.removeItem(k); } catch(e){} }
+function toMin(s){ var m = /^(\d{1,2}):(\d{2})$/.exec(String(s || "")); return m ? (+m[1]) * 60 + (+m[2]) : NaN; }
+function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad(Math.floor(m / 60)) + ":" + pad(m % 60); }
+function now(){
+  var d = new Date(Date.now() + IST * 60000);
+  return { key:C.keyOfUTC(d), min:d.getUTCHours() * 60 + d.getUTCMinutes(), sec:d.getUTCSeconds(), h:d.getUTCHours(), mi:d.getUTCMinutes() };
+}
+function dayLabel(k){ var d = C.dateOfKey(k); return WD[d.getUTCDay()] + " " + d.getUTCDate() + " " + MON[d.getUTCMonth()]; }
+function fmtLeft(sec){
+  sec = Math.max(0, Math.floor(sec));
+  var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  return h ? (h + "h " + pad(m) + "m") : (m + ":" + pad(s));
+}
+function cfgMe(){ return S && S.me && S.me.config; }
+function fmtT(m, cfg){
+  cfg = cfg || cfgMe();
+  m = ((m % 1440) + 1440) % 1440;
+  var h = Math.floor(m / 60), mi = m % 60;
+  if (cfg && cfg.clock12 === false) return pad(h) + ":" + pad(mi);
+  return (h % 12 || 12) + ":" + pad(mi) + " " + (h < 12 ? "AM" : "PM");
+}
+
+/* ---------------- sample plans (all editable in the app) ---------------- */
+function B(id, start, end, title, kind, note, o){
+  o = o || {};
+  return { id:id, start:start, end:end, title:title, kind:kind, note:note || "", alert:o.alert || "",
+           remind:(o.remind == null ? -1 : o.remind), persist:!!o.persist, track:!!o.track };
+}
+function P(id, time, title, kind, note){ return { id:id, time:time, title:title, kind:kind, note:note || "" }; }
+function W(title, focus, warmup, items, finisher){
+  return { title:title, focus:focus, warmup:warmup, finisher:finisher,
+           items:items.map(function(x){ var p = x.split("|"); return { n:p[0].trim(), s:(p[1] || "").trim() }; }) };
+}
+function amalConfig(){
+  var WAKE = "Phone across the room. Big glass of water, then a banana or 2–3 dates.";
+  var GYM = "The gym opens at 5. About 15 min travel each way and 75 min of training. Today's workout is in the Gym tab.";
+  var READ = "Paper book or Kindle, not the phone.";
+  function evening(p, tuition){
+    return [
+      B(p+"e1","19:30","20:15","Freshen up & dinner","meal","Immediate transition out of work mode.",{alert:"Log off. Out of work mode.",remind:0}),
+      B(p+"e2","20:15","21:15",tuition ? "Tuition" : "Tuition / free time","focus","",{alert:"Tuition time.",remind:0}),
+      B(p+"e3","21:15","21:45","Book reading","focus",READ,{alert:"Reading time: 30 minutes.",remind:0}),
+      B(p+"e4","21:45","22:00","Wind down","plan","Phone down. Downtime starts. Lay out tomorrow's gym clothes.",{alert:"Phone down. Wind down for sleep.",remind:0,persist:true}),
+      B(p+"e5","22:00","05:00","Sleep","sleep","Seven hours before the 5:00 AM alarm.",{alert:"Lights out.",remind:0,persist:true,track:true})
+    ];
+  }
+  function morning(p){
+    return [
+      B(p+"m1","05:00","05:30","Wake up & pre-workout","routine",WAKE,{alert:"Up. Water, banana, gym clothes.",remind:0,track:true}),
+      B(p+"m2","05:30","07:15","Gym + travel","gym",GYM,{alert:"Keys, bottle, out the door.",remind:5,track:true}),
+      B(p+"m3","07:15","08:00","Shower & breakfast","meal","Protein-rich breakfast. Tick your habits right after.",{alert:"Breakfast, then tick your habits.",remind:0}),
+      B(p+"m4","08:00","10:00","Movie / series","screen","Your screen time for the day. Hard stop at 10:00 AM.",{alert:"Screen time: two hours, hard stop at 10.",remind:0})
+    ];
+  }
+  return {
+    v:4, updatedAt:0, gymStart:"2026-10-26", clock12:true,
+    templates:{
+      weekday: morning("w").concat([
+        B("w1","10:00","10:15","Reset","break","Screens off. Tidy up, water, a short stretch.",{alert:"Screens off. Reset before work.",remind:0,persist:true}),
+        B("w2","10:15","10:30","Desk setup & top 3","plan","Sit at the desk, open your system, write today's top 3.",{alert:"Plan your day before 10:30.",remind:0,persist:true}),
+        B("w3","10:30","14:30","Work block 1","work","Turn on Work Focus on Mac, iPhone and Watch.",{alert:"Work Focus on. Hardest task first.",remind:0,track:true}),
+        B("w4","14:30","15:30","Lunch + 20-min reset","meal","Step away from the work screen completely.",{alert:"Step away from the screen.",remind:0}),
+        B("w5","15:30","19:30","Work block 2 & wrap-up","work","Shutdown starts at 7:15 PM so you log off sharp at 7:30.",{alert:"Back at the desk.",remind:0,track:true})
+      ]).concat(evening("w", true)),
+      saturday: morning("s").concat([
+        B("s1","10:00","13:00","Errands & chores","free","Bank, shopping, laundry and anything pushed from the week."),
+        B("s2","13:00","14:00","Lunch","meal","",{alert:"Lunch time.",remind:0}),
+        B("s3","14:00","15:00","Rest","break","A 20–30 minute nap at most so night sleep isn't affected."),
+        B("s4","15:00","19:30","Out & about","free","Friends, family, a movie or the beach.")
+      ]).concat(evening("s", false)),
+      sunday: [
+        B("u1","05:00","05:30","Wake up & hydrate","routine","Rest day, same alarm. A steady wake time keeps your body clock sharp.",{alert:"Up. Water first.",remind:0,track:true}),
+        B("u2","05:30","06:30","Easy walk & stretch","move","The gym is closed. Light movement helps recovery."),
+        B("u3","06:30","07:30","Breakfast with family","meal",""),
+        B("u4","07:30","10:00","Movie / series","screen","Hard stop at 10:00 AM.",{alert:"Screen time until 10.",remind:0}),
+        B("u5","10:00","13:00","Free morning","free","Family, friends or an outing."),
+        B("u6","13:00","14:00","Lunch","meal","",{alert:"Lunch time.",remind:0}),
+        B("u7","14:00","15:30","Rest","break","A short nap or a book."),
+        B("u8","15:30","18:30","Free time","free","Go out, meet people, do something you enjoy."),
+        B("u9","18:30","19:30","Weekly review & Monday prep","plan","Check your streak, set next week's goals, pack the gym bag.",{alert:"Weekly review time.",remind:0,track:true})
+      ].concat(evening("u", false))
+    },
+    pings:{
+      weekday:[ P("pw1","09:50","10 minutes of screen time left","alert","Finish the episode. Screens off at 10."),
+                P("pw2","12:00","Snack","snack","Fruit and a handful of peanuts or almonds."),
+                P("pw3","17:30","Snack","snack","Sprouts, boiled chana or a glass of buttermilk."),
+                P("pw4","19:15","15-min shutdown","alert","Clear pending items so you log off sharp at 7:30.") ],
+      saturday:[ P("ps1","09:50","10 minutes of screen time left","alert","Screens off at 10."),
+                 P("ps2","11:30","Snack","snack","Fruit and a handful of nuts."),
+                 P("ps3","17:00","Snack","snack","Sprouts, boiled chana or buttermilk.") ],
+      sunday:[ P("pu1","05:10","Weekly weigh-in","weigh","After the toilet, before food or water. Log it in Sharp."),
+               P("pu2","11:30","Snack","snack","Fruit and a handful of nuts."),
+               P("pu3","17:00","Snack","snack","Sprouts, boiled chana or buttermilk.") ]
+    },
+    water:{ on:true, from:"07:00", to:"20:00", every:60, ml:200, calendar:true },
+    workouts:{
+      1: W("Push","Chest · shoulders · triceps","5 min easy cycle, arm circles, 2 light sets of the first lift.",
+        ["Barbell or dumbbell bench press | 4 × 6–10","Seated dumbbell shoulder press | 3 × 8–12","Incline dumbbell press | 3 × 8–12",
+         "Lateral raise | 3 × 12–15","Rope triceps pushdown | 3 × 10–15","Overhead dumbbell triceps extension | 2 × 10–12"],
+        "10 min incline walk, then 5 min chest and shoulder stretch."),
+      2: W("Pull","Back · biceps · rear shoulders","5 min rowing machine, band pull-aparts, 2 light sets of pulldowns.",
+        ["Lat pulldown | 4 × 8–12","Seated cable row | 3 × 8–12","One-arm dumbbell row | 3 × 10 each side",
+         "Face pull | 3 × 12–15","Barbell or EZ-bar curl | 3 × 8–12","Hammer curl | 2 × 10–12"],
+        "10 min easy cycle, then 5 min back and arm stretch."),
+      3: W("Legs: quads","Quads · glutes · calves · core","5 min cycle, 15 bodyweight squats, leg swings.",
+        ["Goblet squat or barbell back squat | 4 × 6–10","Leg press | 3 × 10–12","Walking lunge | 3 × 10 each leg",
+         "Leg extension | 3 × 12–15","Standing calf raise | 4 × 12–15","Plank | 3 × 30–45 s"],
+        "5 min hip and quad stretch."),
+      4: W("Upper","Chest · back · shoulders from new angles","5 min cycle, arm circles, band pull-aparts.",
+        ["Incline barbell or dumbbell press | 4 × 6–10","Assisted or band pull-up | 3 × 6–10","Flat dumbbell press or push-up | 3 × 10–15",
+         "Chest-supported dumbbell row | 3 × 10–12","Arnold press | 3 × 10–12","Curl + pushdown superset | 2 × 12 each"],
+        "10 min bike intervals: 30 s hard, 90 s easy."),
+      5: W("Legs: hamstrings","Hamstrings · glutes · core","5 min cycle, hip circles, 15 glute bridges.",
+        ["Romanian deadlift | 4 × 8–10","Hip thrust or glute bridge | 3 × 10–12","Lying or seated leg curl | 3 × 10–15",
+         "Bulgarian split squat | 3 × 8 each leg","Seated calf raise | 3 × 15","Hanging knee raise | 3 × 10–15"],
+        "5 min hamstring and hip stretch."),
+      6: W("Conditioning","Full-body circuit · cardio · mobility","10 min easy jog or cycle and dynamic stretches.",
+        ["Circuit, 4 rounds, 90 s rest between rounds | 4 rounds","Kettlebell or dumbbell swing | 15 reps","Push-up | 12 reps",
+         "Goblet squat | 12 reps","Inverted or TRX row | 10 reps","Bike or treadmill: 1 min hard, 1 min easy | 15 min"],
+        "10 min full-body stretch."),
+      0: W("Rest & recover","The gym is closed today","No warm-up needed.",
+        ["Easy walk | 30–40 min","Mobility: hips, back, shoulders | 10 min","Foam roll or stretch sore areas | 10 min"],
+        "Sleep seven hours and eat protein at every meal.")
+    },
+    habits:[
+      { id:"h1", text:"Up at the first alarm, phone across the room" },
+      { id:"h2", text:"Gym or walk done" },
+      { id:"h3", text:"Protein at breakfast" },
+      { id:"h4", text:"Screens off at 10 AM" },
+      { id:"h5", text:"Read 30 minutes" },
+      { id:"h6", text:"Phone down by 9:45 PM" }
+    ]
+  };
+}
+function partnerConfig(){
+  function day(p, work){
+    return [
+      B(p+"1","06:00","06:30","Wake up","routine","A glass of water before the phone.",{alert:"Good morning. Up and water.",remind:0,track:true}),
+      B(p+"2","06:30","07:30","Morning routine & breakfast","meal",""),
+      B(p+"3","07:30","08:15","Move: walk, yoga or workout","move","30–45 minutes of movement.",{alert:"Time to move.",remind:0,track:true}),
+      B(p+"4","08:15","09:00","Get ready","routine",""),
+      B(p+"5","09:00","13:00",work ? "Work / study" : "Free morning", work ? "work" : "free","",work ? {alert:"Focus time.",remind:0,track:true} : {}),
+      B(p+"6","13:00","14:00","Lunch","meal",""),
+      B(p+"7","14:00","18:00",work ? "Work / study" : "Free afternoon", work ? "work" : "free",""),
+      B(p+"8","18:00","19:30","Free time","free",""),
+      B(p+"9","19:30","20:30","Dinner","meal",""),
+      B(p+"10","20:30","21:30","Reading","focus","Book, not phone.",{alert:"Reading time.",remind:0}),
+      B(p+"11","21:30","22:00","Wind down","plan","Phone down.",{alert:"Phone down. Wind down.",remind:0}),
+      B(p+"12","22:00","06:00","Sleep","sleep","",{alert:"Lights out.",remind:0,track:true})
+    ];
+  }
+  var walk = W("Walk","Easy cardio","",["Brisk walk | 30–45 min"],"5 min stretch.");
+  return {
+    v:4, updatedAt:0, gymStart:"2026-10-26", clock12:true,
+    templates:{ weekday:day("w", true), saturday:day("s", false), sunday:day("u", false) },
+    pings:{ weekday:[P("pw1","11:00","Snack","snack","Fruit or nuts."),P("pw2","16:30","Snack","snack","Something light.")],
+            saturday:[P("ps1","11:00","Snack","snack","Fruit or nuts.")],
+            sunday:[P("pu1","06:10","Weekly weigh-in","weigh","After the toilet, before food or water."),P("pu2","11:00","Snack","snack","Fruit or nuts.")] },
+    water:{ on:true, from:"07:00", to:"20:00", every:60, ml:200, calendar:true },
+    workouts:{
+      1: W("Full body A","Beginner strength","5 min march in place, arm circles.",["Bodyweight squat | 3 × 12","Knee or wall push-up | 3 × 10","Glute bridge | 3 × 15","Bird dog | 3 × 8 each side","Plank | 3 × 20–30 s"],"5 min stretch."),
+      2: walk,
+      3: W("Full body B","Beginner strength","5 min march in place, hip circles.",["Reverse lunge | 3 × 8 each leg","Dumbbell or bottle row | 3 × 12","Side plank | 2 × 20 s each side","Calf raise | 3 × 15","Dead bug | 3 × 8 each side"],"5 min stretch."),
+      4: W("Yoga & mobility","Flexibility","",["Yoga flow or video | 25–30 min"],""),
+      5: W("Full body A","Beginner strength","5 min march in place.",["Bodyweight squat | 3 × 12","Knee or wall push-up | 3 × 10","Glute bridge | 3 × 15","Plank | 3 × 20–30 s"],"5 min stretch."),
+      6: W("Long walk","Easy cardio","",["Walk somewhere nice | 45–60 min"],""),
+      0: W("Rest","Recovery","",["Gentle stretch | 10 min"],"")
+    },
+    habits:[ { id:"h1", text:"Up at the first alarm" }, { id:"h2", text:"Moved for 30 minutes" }, { id:"h3", text:"Read 20 pages" }, { id:"h4", text:"No phone in bed" } ]
+  };
+}
+function defaultConfig(user){ return user === "b" ? partnerConfig() : amalConfig(); }
+function defaultProfile(user){
+  return { name: user === "a" ? "Amal" : "", since: now().key, pauses:[], freezeCap:5, weighDay:0, goalKg:null,
+           shareWeight:false, email:"", nightly:false, updatedAt:0 };
+}
+
+/* ---------------- normalising stored data ---------------- */
+function normBlock(b){
+  b = b || {};
+  return { id:String(b.id || uid()), start:String(b.start || "09:00"), end:String(b.end || "10:00"), title:String(b.title || ""),
+           kind: KINDS[b.kind] ? b.kind : "free", note:String(b.note || ""), alert:String(b.alert || ""),
+           remind: (b.remind !== "" && b.remind != null && isFinite(+b.remind)) ? +b.remind : -1, persist:!!b.persist, track:!!b.track };
+}
+function normPing(p){ p = p || {}; return { id:String(p.id || uid()), time:String(p.time || "12:00"), title:String(p.title || ""), kind: PING_KINDS[p.kind] ? p.kind : "alert", note:String(p.note || "") }; }
+function normWo(w){
+  w = w || {};
+  return { title:String(w.title || ""), focus:String(w.focus || ""), warmup:String(w.warmup || ""), finisher:String(w.finisher || ""),
+           items: Array.isArray(w.items) ? w.items.map(function(x){ return { n:String((x && x.n) || ""), s:String((x && x.s) || "") }; }).filter(function(x){ return x.n; }) : [] };
+}
+function normCfg(c, user){
+  var d = defaultConfig(user); c = c || {};
+  var o = { v:4, updatedAt:Number(c.updatedAt) || 0, gymStart: /^\d{4}-\d{2}-\d{2}$/.test(c.gymStart || "") ? c.gymStart : d.gymStart,
+            clock12: c.clock12 === undefined ? d.clock12 : !!c.clock12, templates:{}, pings:{}, water:{}, workouts:{}, habits:[] };
+  TPLS.forEach(function(t){
+    o.templates[t] = c.templates && Array.isArray(c.templates[t]) ? c.templates[t].map(normBlock) : d.templates[t];
+    o.pings[t] = c.pings && Array.isArray(c.pings[t]) ? c.pings[t].map(normPing) : d.pings[t];
+  });
+  var w = Object.assign({}, d.water, c.water || {});
+  o.water = { on:!!w.on, from:String(w.from || "07:00"), to:String(w.to || "20:00"), every:Math.max(15, +w.every || 60), ml:Math.max(50, +w.ml || 200), calendar:!!w.calendar };
+  for (var i = 0; i < 7; i++) o.workouts[i] = c.workouts && c.workouts[i] ? normWo(c.workouts[i]) : d.workouts[i];
+  o.habits = Array.isArray(c.habits) ? c.habits.filter(function(h){ return h && h.text; }).map(function(h){ return { id:String(h.id || uid()), text:String(h.text) }; }) : d.habits;
+  return o;
+}
+function normProfile(p, user){
+  var d = defaultProfile(user); p = p || {};
+  return { name:String(p.name != null ? p.name : d.name), since: /^\d{4}-\d{2}-\d{2}$/.test(p.since || "") ? p.since : d.since,
+    pauses: Array.isArray(p.pauses) ? p.pauses.filter(function(x){ return x && x.from; }).map(function(x){ return { from:String(x.from), to:x.to ? String(x.to) : null, reason:String(x.reason || "") }; }) : [],
+    freezeCap: Math.max(1, Math.min(10, +p.freezeCap || 5)), weighDay: p.weighDay == null ? 0 : +p.weighDay,
+    goalKg: p.goalKg ? +p.goalKg : null, shareWeight:!!p.shareWeight, email:String(p.email || ""), nightly:!!p.nightly, updatedAt:Number(p.updatedAt) || 0 };
+}
+function normDay(r, k){
+  r = r || {};
+  var t = Array.isArray(r.top3) ? r.top3 : [], wo = r.wo || {};
+  return { date:k, checks: r.checks && typeof r.checks === "object" ? Object.assign({}, r.checks) : {},
+    req: Array.isArray(r.req) ? r.req.map(String) : null,
+    top3:[0,1,2].map(function(i){ var x = t[i] || {}; return { t:String(x.t || ""), done:!!x.done }; }),
+    water: Math.max(0, Math.min(60, Number(r.water) || 0)),
+    pings: r.pings && typeof r.pings === "object" ? Object.assign({}, r.pings) : {},
+    habits: r.habits && typeof r.habits === "object" ? Object.assign({}, r.habits) : {},
+    wo:{ done: wo.done && typeof wo.done === "object" ? Object.assign({}, wo.done) : {}, notes:String(wo.notes || ""), complete:!!wo.complete },
+    updatedAt: Number(r.updatedAt) || 0 };
+}
+function normWeights(w){
+  w = w || {};
+  var list = Array.isArray(w.list) ? w.list : (Array.isArray(w) ? w : []);
+  return { list: list.filter(function(x){ return x && x.d && +x.kg > 0; }).map(function(x){ return { d:String(x.d), kg:Math.round(+x.kg * 10) / 10 }; })
+                     .sort(function(a, b){ return a.d < b.d ? -1 : 1; }), updatedAt:Number(w.updatedAt) || 0 };
+}
+
+/* ---------------- state & storage ---------------- */
+var conn = lsGet("sharp4.conn", null);
+var S = null, pending = {}, outCheer = null;
+var ui = { tab:"today", planDay:"today", woDay:null, tpl:"weekday", woEdDay:1 };
+var draft = null, editDirty = false;
+function storeKey(){ return "sharp4.data." + (conn.demo ? "demo" : String(conn.k).slice(0, 10)); }
+function saveLocal(){ if (!conn) return; lsSet(storeKey(), S); lsSet(storeKey() + ".pending", pending); }
+function loadLocal(){
+  S = lsGet(storeKey(), null); pending = lsGet(storeKey() + ".pending", {}) || {};
+  if (S) {
+    S.me.days = S.me.days || {}; S.buddy = S.buddy || { days:{} }; S.buddy.days = S.buddy.days || {};
+    Object.keys(S.me.days).forEach(function(k){ S.me.days[k] = normDay(S.me.days[k], k); });
+  }
+}
+function dev(){ return Object.assign({ alerts:false, awake:false }, lsGet("sharp4.dev", {}) || {}); }
+function setDev(o){ lsSet("sharp4.dev", Object.assign(dev(), o)); }
+
+function emptyState(user){ return { user:user, me:{ config:null, profile:null, weights:null, days:{} }, buddy:{ config:null, profile:null, weights:null, days:{} }, since:0, buddySince:0, cheers:[], cal:{}, bootstrapped:false }; }
+
+/* ---------------- connection ---------------- */
+function b64urlDecode(s){
+  s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "=";
+  var bin = atob(s), bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+function parseConnect(text){
+  var m = /connect=([A-Za-z0-9_\-]+)/.exec(String(text || ""));
+  if (!m) return null;
+  try { var o = JSON.parse(b64urlDecode(m[1])); if (o && o.s && o.k && /^https:\/\//.test(o.s)) return { s:o.s, k:o.k }; } catch(e){}
+  return null;
+}
+function connectWith(c){
+  conn = c; lsSet("sharp4.conn", conn);
+  loadLocal();
+  boot();
+}
+(function readHash(){
+  var c = parseConnect(location.hash);
+  if (c) {
+    try { history.replaceState(null, "", location.pathname + location.search); } catch(e){}
+    if (!conn || conn.k !== c.k || conn.s !== c.s) { conn = c; lsSet("sharp4.conn", conn); }
+  }
+})();
+
+/* ---------------- server ---------------- */
+function api(body){
+  return fetch(conn.s, { method:"POST", body:JSON.stringify(body), redirect:"follow" }).then(function(r){
+    if (!r.ok) throw new Error("Server error " + r.status);
+    return r.json();
+  });
+}
+var syncing = false, again = false, syncTimer = null, lastSync = 0, syncMsg = "";
+function setSync(state, msg){
+  var dot = $("syncDot");
+  dot.className = "sync-dot" + (state === "busy" ? " busy" : state === "off" ? " off" : "");
+  syncMsg = state === "ok" ? "Synced · " + fmtT(now().min) : state === "busy" ? "Syncing…" : state === "demo" ? "Demo mode: nothing is saved to Google." : "Offline. Your changes are kept and sync when you're back." + (msg ? " (" + msg + ")" : "");
+  if ($("syncLbl")) $("syncLbl").textContent = syncMsg;
+}
+function queue(k, obj, delay){
+  obj.updatedAt = Date.now();
+  pending[k] = { j:JSON.stringify(obj), u:obj.updatedAt };
+  saveLocal();
+  scheduleSync(delay == null ? 1200 : delay);
+}
+function scheduleSync(ms){ if (!conn || conn.demo) return; clearTimeout(syncTimer); syncTimer = setTimeout(doSync, ms || 0); }
+function doSync(){
+  if (!conn || conn.demo) return Promise.resolve();
+  if (syncing) { again = true; return Promise.resolve(); }
+  syncing = true; setSync("busy");
+  var sent = {}, writes = Object.keys(pending).map(function(k){ sent[k] = pending[k].u; return { k:k, j:pending[k].j, u:pending[k].u }; });
+  var body = { key:conn.k, action:"sync", since:S && S.bootstrapped ? S.since : 0, buddySince:S && S.bootstrapped ? S.buddySince : 0, writes:writes, v:APP_VERSION };
+  var cheer = outCheer; if (cheer) body.cheer = cheer;
+  return api(body).then(function(res){
+    if (!res || !res.ok) {
+      if (res && res.code === "auth") { disconnect("Your link no longer works. Paste your latest Sharp link."); return; }
+      throw new Error((res && res.error) || "Sync failed");
+    }
+    Object.keys(sent).forEach(function(k){ if (pending[k] && pending[k].u === sent[k]) delete pending[k]; });
+    if (cheer && outCheer === cheer) outCheer = null;
+    applyServer(res);
+    lastSync = Date.now(); setSync("ok");
+  }).catch(function(e){ setSync("off", e && e.message); if (!S || !S.bootstrapped) showLoading((e && e.message) || "Couldn't reach your Sharp server."); })
+    .then(function(){ syncing = false; if (again) { again = false; scheduleSync(400); } });
+}
+function mergeSide(side, rows, mine, user){
+  var changed = false;
+  Object.keys(rows || {}).forEach(function(k){
+    var it = rows[k];
+    if (mine && pending[k] && pending[k].u > it.u) return;
+    var obj; try { obj = JSON.parse(it.j); } catch(e){ return; }
+    changed = true;
+    if (k === "config") side.config = normCfg(obj, user);
+    else if (k === "profile") side.profile = normProfile(obj, user);
+    else if (k === "weights") side.weights = it.hidden ? null : normWeights(obj);
+    else if (k.indexOf("day/") === 0) { var d = k.slice(4); side.days[d] = normDay(obj, d); }
+  });
+  return changed;
+}
+function applyServer(res){
+  if (!S || S.user !== res.user) S = emptyState(res.user);
+  var other = res.user === "a" ? "b" : "a";
+  mergeSide(S.me, res.me, true, res.user);
+  mergeSide(S.buddy, res.buddy, false, other);
+  S.since = res.now; S.buddySince = res.now;
+  S.cheers = res.cheers || []; S.cal = res.cal || {};
+  var created = false;
+  if (!S.me.config) { S.me.config = defaultConfig(S.user); queue("config", S.me.config, 0); created = true; }
+  if (!S.me.profile) { S.me.profile = defaultProfile(S.user); queue("profile", S.me.profile, 0); created = true; }
+  if (!S.me.weights) S.me.weights = { list:[], updatedAt:0 };
+  S.bootstrapped = true;
+  saveLocal();
+  if (!editDirty) draft = null;
+  renderAll();
+  showIncomingCheer();
+  if (created) fire("Welcome to Sharp", "Your plan is ready. Change anything in Plan > Edit.");
+}
+
+/* ---------------- schedule maths ---------------- */
+function blocksFor(cfg, k){
+  var list = (cfg.templates[C.tplOf(k)] || []).map(function(b){
+    var s = toMin(b.start), e = toMin(b.end);
+    if (isNaN(s) || isNaN(e)) return null;
+    if (e <= s) e += 1440;
+    var o = Object.assign({}, b, { s:s, e:e });
+    if (b.kind === "gym" && cfg.gymStart && k < cfg.gymStart) {
+      o.title = "Morning walk & mobility";
+      o.note = "The gym starts " + dayLabel(cfg.gymStart) + ". Until then: a 30–40 minute brisk walk and 10 minutes of stretching.";
+      o.preGym = true;
+    }
+    return o;
+  }).filter(Boolean);
+  list.sort(function(a, b){ return a.s - b.s; });
+  return list;
+}
+function pingsFor(cfg, k){
+  return (cfg.pings[C.tplOf(k)] || []).map(function(p){ var s = toMin(p.time); return isNaN(s) ? null : Object.assign({}, p, { s:s }); })
+    .filter(Boolean).sort(function(a, b){ return a.s - b.s; });
+}
+function waterSlots(cfg){
+  var w = cfg.water; if (!w || !w.on) return [];
+  var a = toMin(w.from), b = toMin(w.to), step = Math.max(15, +w.every || 60), out = [];
+  if (isNaN(a) || isNaN(b)) return out;
+  for (var m = a; m <= b; m += step) out.push(m);
+  return out;
+}
+function locate(cfg, k, min){
+  var today = blocksFor(cfg, k), y = C.addDays(k, -1), yb = blocksFor(cfg, y), cur = null, curK = k, frame = min, i;
+  for (i = 0; i < yb.length; i++) if (yb[i].e > 1440 && min + 1440 >= yb[i].s && min + 1440 < yb[i].e) { cur = yb[i]; curK = y; frame = min + 1440; }
+  if (!cur) for (i = 0; i < today.length; i++) if (min >= today[i].s && min < today[i].e) { cur = today[i]; break; }
+  var next = null, nextAt = Infinity;
+  today.forEach(function(b){ if (b.s > min && b.s < nextAt) { next = b; nextAt = b.s; } });
+  var tm = blocksFor(cfg, C.addDays(k, 1));
+  if (tm.length && 1440 + tm[0].s < nextAt) { next = tm[0]; nextAt = 1440 + tm[0].s; }
+  return { cur:cur, curK:curK, frame:frame, next:next, nextAt:nextAt, today:today };
+}
+function rec(k){ return S.me.days[k] || normDay(null, k); }
+function mutateDay(k, fn, delay){
+  var r = normDay(rec(k), k);
+  fn(r);
+  if (k === now().key || !r.req) r.req = C.requiredFor(S.me.config, k);
+  r.updatedAt = Date.now();
+  S.me.days[k] = r;
+  queue("day/" + k, r, delay);
+  renderLive();
+}
+function myStreak(){ var t = now().key; return C.streak(S.me.config, S.me.profile, S.me.days, t); }
+function buddyStreak(){
+  if (!S.buddy.config || !S.buddy.profile) return null;
+  return C.streak(S.buddy.config, S.buddy.profile, S.buddy.days || {}, now().key);
+}
+
+/* ---------------- rendering ---------------- */
+function setTab(t){
+  if (t === "edit" && !draft) draft = clone(S.me.config);
+  ui.tab = t;
+  ["today","plan","gym","me","edit"].forEach(function(x){ $("v-" + x).hidden = x !== t; });
+  Array.prototype.forEach.call(document.querySelectorAll("#tabbar [data-tab]"), function(b){
+    var on = b.getAttribute("data-tab") === t || (t === "edit" && b.getAttribute("data-tab") === "plan");
+    b.setAttribute("aria-selected", on);
+  });
+  $("saveBar").hidden = !(t === "edit" && editDirty);
+  $("tabbar").hidden = t === "edit" && editDirty;
+  renderView();
+  window.scrollTo(0, 0);
+}
+function renderAll(){
+  if (!conn) { showConnect(); return; }
+  if (!S || !S.bootstrapped) { showLoading(); return; }
+  $("v-connect").hidden = true; $("v-loading").hidden = true; $("tabbar").hidden = false;
+  if (["today","plan","gym","me","edit"].indexOf(ui.tab) < 0) ui.tab = "today";
+  setTab(ui.tab);
+}
+function renderView(){
+  var t = now();
+  renderHeader(t);
+  if (ui.tab === "today") renderToday(t);
+  else if (ui.tab === "plan") renderPlan(t);
+  else if (ui.tab === "gym") renderGym(t);
+  else if (ui.tab === "me") renderMe(t);
+  else if (ui.tab === "edit") renderEditor();
+}
+function renderLive(){ if (S && S.bootstrapped && ui.tab !== "edit") renderView(); else if (S && S.bootstrapped) renderHeader(now()); }
+
+function renderHeader(t){
+  var h = t.h, cfg = cfgMe();
+  var txt = cfg && cfg.clock12 === false ? pad(h) + ":" + pad(t.mi) : (h % 12 || 12) + ":" + pad(t.mi) + "<small>" + (h < 12 ? "AM" : "PM") + "</small>";
+  $("clock").innerHTML = txt;
+  $("dateMini").textContent = dayLabel(t.key);
+  var pct = 0;
+  if (cfg) {
+    var bl = blocksFor(cfg, t.key), wake = bl.length ? bl[0].s : 300, sleep = bl.filter(function(b){ return b.kind === "sleep"; })[0];
+    var end = sleep ? sleep.s : 1320;
+    pct = Math.max(0, Math.min(100, (t.min - wake) / Math.max(1, end - wake) * 100));
+  }
+  $("dayFill").style.width = pct.toFixed(1) + "%";
+}
+
+function renderHero(t){
+  var cfg = S.me.config, loc = locate(cfg, t.key, t.min), b = loc.cur, nowSec = t.min * 60 + t.sec;
+  var R = 104, CIRC = 2 * Math.PI * R, pct = 0;
+  if (b) {
+    var fs = loc.frame * 60 + t.sec;
+    pct = Math.max(0, Math.min(1, (fs - b.s * 60) / ((b.e - b.s) * 60)));
+    $("nowLabel").textContent = "Now";
+    $("nowTitle").textContent = b.title;
+    var leftSec = b.e * 60 - fs;
+    $("nowLeft").textContent = fmtLeft(leftSec);
+    $("nowLeft").classList.toggle("long", leftSec >= 3600);
+    $("nowUntil").textContent = "left · until " + fmtT(b.e);
+  } else {
+    $("nowLabel").textContent = "Now";
+    $("nowTitle").textContent = "Free time";
+    $("nowLeft").textContent = loc.next ? fmtLeft(loc.nextAt * 60 - nowSec) : "--";
+    $("nowLeft").classList.toggle("long", loc.next && loc.nextAt * 60 - nowSec >= 3600);
+    $("nowUntil").textContent = "until the next block";
+  }
+  $("ringProg").setAttribute("stroke-dashoffset", (CIRC * (1 - pct)).toFixed(2));
+  var ang = pct * 2 * Math.PI;
+  $("ringHead").setAttribute("cx", (120 + R * Math.cos(ang)).toFixed(2));
+  $("ringHead").setAttribute("cy", (120 + R * Math.sin(ang)).toFixed(2));
+  $("nextLine").innerHTML = loc.next ? "Next · <b>" + esc(fmtT(loc.next.s)) + " " + esc(loc.next.title) + "</b> in " + fmtLeft(loc.nextAt * 60 - nowSec) : "";
+  var ck = $("checkin");
+  if (b && b.track && !(S.me.days[loc.curK] && S.me.days[loc.curK].checks[b.id])) {
+    var sig = loc.curK + "|" + b.id;
+    if (ck.getAttribute("data-sig") !== sig) {
+      ck.innerHTML = '<span>Started on time?</span><button class="pill go" type="button" data-mark="on" data-k="' + loc.curK + '" data-id="' + esc(b.id) + '">On time</button>' +
+        '<button class="pill stop" type="button" data-mark="late" data-k="' + loc.curK + '" data-id="' + esc(b.id) + '">Late</button>';
+      ck.setAttribute("data-sig", sig);
+    }
+    ck.hidden = false;
+  } else { ck.hidden = true; ck.setAttribute("data-sig", ""); }
+}
+
+function renderToday(t){
+  var cfg = S.me.config, prof = S.me.profile, r = rec(t.key);
+  renderHero(t);
+  // name prompt for a new partner profile
+  $("nameCard").innerHTML = prof.name ? "" :
+    '<div class="card" style="display:grid;gap:10px"><span class="eyebrow">Welcome</span><b>What should Sharp call you?</b><div class="row"><input type="text" id="firstName" placeholder="Your name" style="flex:1"><button class="btn" type="button" id="saveFirstName">Save</button></div></div>';
+
+  var st = myStreak(), lv = st.level;
+  var stChips = '<span class="chip gold">' + esc(lv.name) + '</span>';
+  if (st.paused) stChips = '<span class="chip">Paused · ' + esc(st.paused.reason || "break") + '</span>';
+  $("streakTile").innerHTML = '<span class="eyebrow">Streak</span><span class="big">' + st.current + '</span>' +
+    '<span class="small muted">' + (st.today === "clean" ? "Today is secured" : st.paused ? "Held while paused" : "day" + (st.current === 1 ? "" : "s") + " in a row") + '</span>' +
+    '<span class="chips">' + stChips + '<span class="chip ice">' + st.freezes + ' freeze' + (st.freezes === 1 ? "" : "s") + '</span></span>';
+
+  var bs = buddyStreak();
+  if (bs) {
+    var bn = S.buddy.profile.name || (S.user === "a" ? "Partner" : "Amal");
+    var breq = C.requiredFor(S.buddy.config, t.key), brec = (S.buddy.days || {})[t.key], bon = 0;
+    breq.forEach(function(id){ if (brec && brec.checks && brec.checks[id] === "on") bon++; });
+    var couple = C.coupleStreak(st, bs, t.key);
+    $("buddyTile").innerHTML = '<div class="buddy-top"><span class="avatar">' + esc((bn[0] || "?").toUpperCase()) + '</span><b>' + esc(bn) + '</b></div>' +
+      '<span class="small"><b class="num" style="font-size:22px">' + bs.current + '</b> day streak' + (bs.paused ? ' · paused' : '') + '</span>' +
+      '<span class="small muted">' + bon + '/' + breq.length + ' on time today · together ' + couple + 'd</span>' +
+      '<button class="pill ink sm" type="button" id="cheerBtn" style="justify-self:start">Cheer</button>';
+  } else {
+    $("buddyTile").innerHTML = '<span class="eyebrow">Buddy</span><b>' + (S.user === "a" ? "Waiting for your partner" : "Waiting for Amal") + '</b>' +
+      '<span class="small muted">' + (S.user === "a" ? "Send her the partner link from the Links tab of your Sharp data sheet." : "Their streak shows here once they open Sharp.") + '</span>';
+  }
+
+  // quick actions
+  var slots = waterSlots(cfg), n = slots.length, ml = cfg.water.ml || 200;
+  var q = '<button class="qa' + (n && r.water >= n ? " done" : "") + '" type="button" id="qaWater"><span class="v">' + r.water + '<span class="muted" style="font-size:16px">/' + n + '</span></span><span class="l">Water +1</span></button>';
+  var hd = cfg.habits.filter(function(h){ return r.habits[h.id]; }).length;
+  q += '<button class="qa' + (cfg.habits.length && hd === cfg.habits.length ? " done" : "") + '" type="button" id="qaHabits"><span class="v">' + hd + '<span class="muted" style="font-size:16px">/' + cfg.habits.length + '</span></span><span class="l">Habits</span></button>';
+  var weighToday = C.wdOf(t.key) === prof.weighDay;
+  if (weighToday) {
+    var wl = S.me.weights.list, lastW = wl.length ? wl[wl.length - 1] : null, doneW = lastW && lastW.d === t.key;
+    q += '<button class="qa' + (doneW ? " done" : "") + '" type="button" id="qaWeigh"><span class="v">' + (doneW ? lastW.kg : "–") + '</span><span class="l">' + (doneW ? "kg today" : "Weigh-in") + '</span></button>';
+  } else {
+    var snacks = pingsFor(cfg, t.key).filter(function(p){ return p.kind === "snack"; }), sd = snacks.filter(function(p){ return r.pings[p.id]; }).length;
+    q += '<button class="qa' + (snacks.length && sd === snacks.length ? " done" : "") + '" type="button" id="qaSnack"><span class="v">' + sd + '<span class="muted" style="font-size:16px">/' + snacks.length + '</span></span><span class="l">Snacks</span></button>';
+  }
+  $("quick").innerHTML = q;
+
+  // top 3 (workdays)
+  var isWork = C.tplOf(t.key) === "weekday";
+  $("foldTop3").hidden = !isWork;
+  if (isWork) {
+    var t3 = $("top3"), ph = ["The one thing that must get done", "Next most important", "Nice to finish today"];
+    if (!t3.children.length) {
+      t3.innerHTML = [0,1,2].map(function(i){ return '<li id="t3li' + i + '"><input type="checkbox" id="t3c' + i + '" aria-label="Priority ' + (i + 1) + ' done"><input type="text" id="t3t' + i + '" maxlength="140" placeholder="' + ph[i] + '"></li>'; }).join("");
+      [0,1,2].forEach(function(i){
+        $("t3t" + i).addEventListener("input", function(e){ var v = e.target.value; mutateDay(now().key, function(x){ x.top3[i].t = v; }, 1500); });
+        $("t3c" + i).addEventListener("change", function(e){ var v = e.target.checked; mutateDay(now().key, function(x){ x.top3[i].done = v; }); });
+      });
+    }
+    var dn = 0;
+    [0,1,2].forEach(function(i){
+      var tx = $("t3t" + i); if (document.activeElement !== tx && tx.value !== r.top3[i].t) tx.value = r.top3[i].t;
+      $("t3c" + i).checked = r.top3[i].done; if (r.top3[i].done) dn++;
+    });
+    $("top3Count").textContent = dn + "/3 done";
+  }
+  $("habits").innerHTML = cfg.habits.map(function(h){
+    var on = !!r.habits[h.id];
+    return '<li class="' + (on ? "done" : "") + '"><label><input type="checkbox" data-habit="' + esc(h.id) + '"' + (on ? " checked" : "") + '><span>' + esc(h.text) + '</span></label></li>';
+  }).join("") || '<li class="muted small">Add habits in Plan > Edit.</li>';
+  $("habitCount").textContent = hd + "/" + cfg.habits.length;
+
+  // compact plan: the next few things
+  var blocks = blocksFor(cfg, t.key), items = planItems(cfg, t.key);
+  var loc = locate(cfg, t.key, t.min), curId = loc.curK === t.key && loc.cur ? loc.cur.id : null;
+  var shown = items.filter(function(it){ return it.e > t.min || it.id === curId; }).slice(0, 6);
+  if (!shown.length) shown = items.slice(-3);
+  $("todayPlan").innerHTML = shown.map(function(it){ return planRow(it, t.key, t, curId, true); }).join("");
+}
+
+function planItems(cfg, k){
+  var items = blocksFor(cfg, k).map(function(b){ return Object.assign({ type:"b" }, b); });
+  pingsFor(cfg, k).forEach(function(p){ items.push(Object.assign({ type:"p", e:p.s + 1 }, p)); });
+  items.sort(function(a, b){ return (a.s + (a.type === "p" ? .5 : 0)) - (b.s + (b.type === "p" ? .5 : 0)); });
+  return items;
+}
+function planRow(it, k, t, curId, live){
+  var r = rec(k), isToday = live && k === t.key;
+  if (it.type === "p") {
+    var done = !!r.pings[it.id], act = "";
+    if (it.kind === "snack" && isToday) act = '<button class="pill sm' + (done ? " go" : "") + '" type="button" data-ping="' + esc(it.id) + '" data-k="' + k + '">' + (done ? "Done" : "Had it") + '</button>';
+    return '<li class="ping' + (isToday && it.s < t.min ? " past" : "") + '"><span class="tm">' + fmtT(it.s) + '</span><span class="tt">' + esc(it.title) + '</span><span class="mk">' + act + '</span></li>';
+  }
+  var cls = "", right = "", below = "";
+  if (isToday) { if (it.id === curId) cls = "now"; else if (it.e <= t.min) cls = "past"; }
+  if (it.track) {
+    var v = r.checks[it.id];
+    if (v) right = '<button class="pill sm ' + (v === "on" ? "go" : "stop") + '" type="button" data-clear="' + esc(it.id) + '" data-k="' + k + '" title="Tap to undo">' + (v === "on" ? "On time" : "Late") + '</button>';
+    else if (isToday && it.s <= t.min) below = '<span class="acts"><button class="pill sm go" type="button" data-mark="on" data-k="' + k + '" data-id="' + esc(it.id) + '">On time</button><button class="pill sm stop" type="button" data-mark="late" data-k="' + k + '" data-id="' + esc(it.id) + '">Late</button></span>';
+    else right = '<span class="dot" title="Check-in"></span>';
+  } else if (cls === "now") right = '<span class="dot now"></span>';
+  var sub = it.note && (cls === "now" || !live) ? '<small>' + esc(it.note) + '</small>' : "";
+  return '<li class="' + cls + '"><span class="tm">' + fmtT(it.s) + '</span><span class="tt">' + esc(it.title) + sub + below + '</span><span class="mk">' + right + '</span></li>';
+}
+
+function previewKey(wd){ var k = now().key; for (var i = 0; i < 7; i++) { var x = C.addDays(k, i); if (C.wdOf(x) === wd) return x; } return k; }
+function renderPlan(t){
+  var live = ui.planDay === "today", k = live ? t.key : previewKey(ui.planDay), cfg = S.me.config;
+  $("planTitle").textContent = live ? "Today" : WDL[C.wdOf(k)];
+  var html = '<button type="button" data-plan="today" aria-pressed="' + live + '">Today</button>';
+  WEEK_ORDER.forEach(function(wd){ html += '<button type="button" data-plan="' + wd + '" aria-pressed="' + (ui.planDay === wd) + '">' + WD[wd] + '</button>'; });
+  $("planDays").innerHTML = html;
+  var loc = locate(cfg, t.key, t.min), curId = live && loc.curK === t.key && loc.cur ? loc.cur.id : null;
+  $("planList").innerHTML = planItems(cfg, k).map(function(it){
+    return planRow(it, k, t, curId, live);
+  }).join("");
+  renderCalStatus();
+}
+
+/* ---------------- calendar ---------------- */
+var calWaiting = false, calPoll = null;
+function calRunning(){ var c = S.cal || {}; return calWaiting || (c.state === "running" && Date.now() - (c.since || 0) < 7 * 60000); }
+function renderCalStatus(){
+  var el = $("calStatus"), c = S.cal || {}, running = calRunning(), stale = !running && c.state === "running";
+  el.className = "note" + ((c.state === "error" || stale) && !running ? " warnbox" : "");
+  el.textContent = conn.demo ? "Calendar alerts work once Sharp is connected to your Google account."
+    : running ? "Updating your calendar… the first time takes a few minutes, later updates only seconds."
+    : c.state === "done" ? "Last updated " + c.at + " · " + c.count + " repeating events. Update again after you change times."
+    : c.state === "partial" ? "Almost there: " + c.left + " events to go. Tap Update calendar to finish."
+    : stale ? "The last update was cut off. Tap Update calendar; it carries on where it stopped."
+    : c.state === "error" ? "The last update didn't finish: " + c.msg
+    : "Not set up yet. Tap Update calendar once.";
+  $("calSync").disabled = conn.demo || running;
+  $("calSync").textContent = running ? "Updating…" : "Update calendar";
+  $("calClear").disabled = conn.demo || running;
+}
+function flushAll(tries){
+  tries = tries || 0;
+  if (tries > 25 || (!syncing && !Object.keys(pending).length)) return Promise.resolve();
+  return new Promise(function(res){ setTimeout(res, 400); }).then(function(){
+    if (!syncing && Object.keys(pending).length) return doSync();
+  }).then(function(){ return flushAll(tries + 1); });
+}
+function syncCal(){
+  if (conn.demo || calRunning()) return;
+  calWaiting = true; renderCalStatus();
+  (Object.keys(pending).length || syncing ? flushAll() : Promise.resolve()).then(function(){
+    return api({ key:conn.k, action:"calendar" });
+  }).then(function(r){
+    calWaiting = false;
+    if (r && r.busy) { S.cal = { state:"running", since:r.since || Date.now() }; renderCalStatus(); pollCal(); return; }
+    if (r && r.partial) { S.cal = { state:"partial", count:r.count, left:r.left }; renderCalStatus(); fire("Almost there", r.left + " events still to add.", { action:{ label:"Finish now", fn:syncCal } }); return; }
+    if (!r || !r.ok) throw new Error((r && r.error) || "Calendar update failed");
+    S.cal = { state:"done", at:r.at, count:r.count }; saveLocal(); renderCalStatus();
+    fire("Calendar updated", r.changed ? r.changed + " changes · " + r.count + " repeating events." : "Already up to date.");
+  }).catch(function(e){
+    calWaiting = false;
+    api({ key:conn.k, action:"calendarStatus" }).then(function(st){ S.cal = st || {}; renderCalStatus(); if (calRunning()) pollCal(); },
+      function(){ S.cal = { state:"error", msg:(e && e.message) || "connection lost" }; renderCalStatus(); });
+  });
+}
+function pollCal(){
+  clearTimeout(calPoll);
+  calPoll = setTimeout(function(){
+    api({ key:conn.k, action:"calendarStatus" }).then(function(st){ S.cal = st || {}; renderCalStatus(); if (calRunning()) pollCal(); }, function(){ pollCal(); });
+  }, 15000);
+}
+
+/* ---------------- gym ---------------- */
+function renderGym(t){
+  var cfg = S.me.config, todayWd = C.wdOf(t.key), wd = ui.woDay == null ? todayWd : ui.woDay;
+  $("gymStreakChip").textContent = "Gym streak " + C.gymStreak(cfg, S.me.profile, S.me.days, t.key);
+  $("woDays").innerHTML = WEEK_ORDER.map(function(d){ return '<button type="button" data-woday="' + d + '" aria-pressed="' + (d === wd) + '">' + WD[d] + (d === todayWd ? " · today" : "") + '</button>'; }).join("");
+  if ($("woNotes") && document.activeElement === $("woNotes")) return;
+  var w = cfg.workouts[wd], isToday = wd === todayWd, r = rec(t.key);
+  var pre = isToday && cfg.gymStart && t.key < cfg.gymStart && wd !== 0;
+  var html = '<span class="eyebrow">' + WDL[wd] + (isToday ? " · today" : "") + '</span><h2 class="wo-title">' + esc(w.title) + '</h2><b>' + esc(w.focus) + '</b>';
+  if (pre) html += '<p class="infobox">The gym starts ' + esc(dayLabel(cfg.gymStart)) + '. Until then, a 30–40 minute brisk walk and 10 minutes of stretching.</p>';
+  if (w.warmup) html += '<div class="box"><span class="eyebrow">Warm-up</span><div>' + esc(w.warmup) + '</div></div>';
+  html += '<ul class="wo-list">' + w.items.map(function(x, i){
+    var on = isToday && !!r.wo.done[i];
+    return '<li class="' + (on ? "done" : "") + '"><label><input type="checkbox" data-wo-i="' + i + '"' + (on ? " checked" : "") + (isToday ? "" : " disabled") + '><span>' + esc(x.n) + '</span><b>' + esc(x.s) + '</b></label></li>';
+  }).join("") + '</ul>';
+  if (w.finisher) html += '<div class="box"><span class="eyebrow">Finish</span><div>' + esc(w.finisher) + '</div></div>';
+  if (isToday) {
+    html += '<label class="field">Weights used and how it felt<textarea id="woNotes" rows="3" placeholder="Bench 40 kg × 8, felt easy.">' + esc(r.wo.notes) + '</textarea></label>' +
+      '<button class="btn' + (r.wo.complete ? " ghost" : "") + '" type="button" id="woDone">' + (r.wo.complete ? "Workout complete · undo" : "Mark workout complete") + '</button>';
+  }
+  $("woCard").innerHTML = html;
+  var notes = $("woNotes");
+  if (notes) notes.addEventListener("input", function(e){ var v = e.target.value; mutateDay(now().key, function(x){ x.wo.notes = v; }, 1500); });
+  $("woWeek").innerHTML = WEEK_ORDER.map(function(d){ var x = cfg.workouts[d]; return '<li><b>' + WD[d] + '</b><span>' + esc(x.title) + ' <span class="muted">· ' + esc(x.focus) + '</span></span></li>'; }).join("");
+}
+
+/* ---------------- me ---------------- */
+function renderMe(t){
+  var prof = S.me.profile, st = myStreak(), lv = st.level;
+  var toNext = lv.nextAt ? Math.round((st.current - lv.at) / (lv.nextAt - lv.at) * 100) : 100;
+  var hist = st.log.slice(-13).map(function(x){ return '<i class="' + x.st + '" title="' + dayLabel(x.k) + ': ' + x.st + '"></i>'; });
+  while (hist.length < 13) hist.unshift("<i></i>");
+  hist.push('<i class="today ' + (st.today === "clean" ? "clean" : st.today === "pause" ? "pause" : "") + '" title="Today"></i>');
+  var fz = ""; for (var i = 0; i < st.cap; i++) fz += '<i class="' + (i < st.freezes ? "have" : "") + '"></i>';
+  var bs = buddyStreak();
+  $("streakCard").innerHTML =
+    '<div class="row" style="justify-content:space-between;align-items:flex-end"><div><span class="eyebrow">Streak</span><div class="big">' + st.current + '</div></div>' +
+    '<div style="text-align:right"><span class="chip gold">' + esc(lv.name) + '</span><div class="small muted" style="margin-top:6px">Best ' + st.best + ' days</div></div></div>' +
+    (lv.nextAt ? '<div class="lvbar"><i style="width:' + toNext + '%"></i></div><span class="small muted">' + (lv.nextAt - st.current) + ' more day' + (lv.nextAt - st.current === 1 ? "" : "s") + ' to ' + lv.next + '</span>' : '<span class="small muted">Top level reached.</span>') +
+    '<div class="hist">' + hist.join("") + '</div>' +
+    '<div class="legend"><span style="--c:var(--go)">Kept</span><span style="--c:var(--ice)">Freeze used</span><span style="--c:var(--stop)">Missed</span><span style="--c:#C9CDD6">Paused</span></div>' +
+    '<div class="row" style="justify-content:space-between"><span class="small"><b>Freezes</b> · earn one every 7 kept days, they carry forward</span><div class="freezes">' + fz + '</div></div>' +
+    '<p class="note">A day is kept when every check-in is marked <b>On time</b>: ' + esc(C.requiredFor(S.me.config, t.key).map(function(id){ var b = (S.me.config.templates[C.tplOf(t.key)] || []).filter(function(x){ return x.id === id; })[0]; return b ? b.title : id; }).join(", ") || "nothing today") + '. A missed day uses a freeze if you have one.</p>' +
+    (bs ? '<p class="note">Together with ' + esc(S.buddy.profile.name || "your partner") + ': <b>' + C.coupleStreak(st, bs, t.key) + '</b> days in a row.</p>' : "");
+
+  var p = st.paused;
+  $("pauseCard").innerHTML = p
+    ? '<span class="eyebrow">Paused</span><b>Paused since ' + esc(dayLabel(p.from)) + ' · ' + esc(p.reason || "break") + '</b><p class="note">Your streak is held, not broken. Resume when you\'re back to your routine.</p><button class="btn" type="button" id="resumeBtn">Resume streak</button>'
+    : '<span class="eyebrow">Emergency pause</span><p class="note">Sick, travelling or a family emergency? Pause so your streak is held instead of broken. Your partner sees that you paused.</p>' +
+      '<div class="grid2"><label class="field">Reason<select id="pauseReason">' + PAUSE_REASONS.map(function(x){ return '<option>' + x + '</option>'; }).join("") + '</select></label>' +
+      '<label class="field">Starting<select id="pauseFrom"><option value="today">Today</option><option value="yesterday">Yesterday</option></select></label></div>' +
+      '<button class="btn ghost" type="button" id="pauseBtn">Pause streak</button>';
+
+  renderWeight(t);
+  var nm = $("meName"); if (document.activeElement !== nm) nm.value = prof.name;
+  var em = $("meEmail"); if (document.activeElement !== em) em.value = prof.email;
+  $("meNightly").checked = prof.nightly; $("meShareWeight").checked = prof.shareWeight;
+  var d = dev(); $("devAlerts").checked = d.alerts; $("devAwake").checked = d.awake;
+  $("devHint").textContent = d.alerts && (!audioCtx || audioCtx.state !== "running") ? "Tap anywhere once so the chime can play." : "Your calendar handles alerts when Sharp is closed.";
+  $("syncLbl").textContent = (conn.demo ? "Demo mode: nothing is saved to Google." : syncMsg) + " · Sharp v" + APP_VERSION;
+  $("disconnectBtn").textContent = conn.demo ? "Leave demo" : "Disconnect";
+}
+function renderWeight(t){
+  var prof = S.me.profile, list = S.me.weights.list, last = list[list.length - 1], prev = list[list.length - 2];
+  var avg4 = list.slice(-4), avg = avg4.length ? avg4.reduce(function(a, x){ return a + x.kg; }, 0) / avg4.length : null;
+  var diff = last && prev ? Math.round((last.kg - prev.kg) * 10) / 10 : null;
+  var html = '<div class="row" style="justify-content:space-between;align-items:flex-end"><div><span class="eyebrow">Weight · weekly</span><div class="big">' + (last ? last.kg : "–") + '<span class="muted" style="font-size:18px"> kg</span></div></div>' +
+    '<div style="text-align:right" class="small">' + (diff != null ? '<b>' + (diff > 0 ? "+" : "") + diff + ' kg</b> vs last time<br>' : "") + (avg ? '<span class="muted">4-entry average ' + avg.toFixed(1) + ' kg</span>' : '<span class="muted">No entries yet</span>') + '</div></div>';
+  html += weightChart(list.slice(-12), prof.goalKg);
+  html += '<div class="grid2"><label class="field">Today\'s weight (kg)<input type="number" id="wInput" inputmode="decimal" step="0.1" min="20" max="300" placeholder="' + (last ? last.kg : "72.5") + '"></label>' +
+    '<label class="field">Goal (kg)<input type="number" id="wGoal" inputmode="decimal" step="0.5" min="20" max="300" value="' + (prof.goalKg || "") + '" placeholder="Optional"></label></div>' +
+    '<div class="row"><button class="btn" type="button" id="wSave">Log weight</button><label class="field" style="flex:1">Weigh-in day<select id="wDay">' + WEEK_ORDER.map(function(d){ return '<option value="' + d + '"' + (prof.weighDay === d ? " selected" : "") + '>' + WDL[d] + '</option>'; }).join("") + '</select></label></div>' +
+    '<p class="note">Same morning each week, after the toilet and before food. One number a week shows the real trend.</p>';
+  var bw = S.buddy.weights && S.buddy.weights.list && S.buddy.weights.list.length ? S.buddy.weights.list[S.buddy.weights.list.length - 1] : null;
+  if (bw && S.buddy.profile) html += '<p class="note">' + esc(S.buddy.profile.name || "Partner") + ' shares their weight: <b>' + bw.kg + ' kg</b> on ' + esc(dayLabel(bw.d)) + '.</p>';
+  $("weightCard").innerHTML = html;
+}
+function weightChart(list, goal){
+  if (list.length < 2) return '<p class="infobox">Your trend line appears after two weigh-ins.</p>';
+  var W = 320, H = 130, pl = 34, pr = 10, pt = 12, pb = 22;
+  var vals = list.map(function(x){ return x.kg; }); if (goal) vals.push(goal);
+  var mn = Math.floor(Math.min.apply(null, vals) - 1), mx = Math.ceil(Math.max.apply(null, vals) + 1);
+  function X(i){ return pl + (W - pl - pr) * (list.length === 1 ? 0.5 : i / (list.length - 1)); }
+  function Y(v){ return pt + (H - pt - pb) * (1 - (v - mn) / (mx - mn)); }
+  var pts = list.map(function(x, i){ return X(i).toFixed(1) + "," + Y(x.kg).toFixed(1); }).join(" ");
+  var s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Weight trend">';
+  [mn, (mn + mx) / 2, mx].forEach(function(v){ s += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" stroke="#E5E7EC" stroke-width="1"/><text x="' + (pl - 6) + '" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end" font-size="10" fill="#687084">' + (Math.round(v * 10) / 10) + '</text>'; });
+  if (goal) s += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(goal).toFixed(1) + '" y2="' + Y(goal).toFixed(1) + '" stroke="#138A4E" stroke-width="1.5" stroke-dasharray="4 4"/><text x="' + (W - pr) + '" y="' + (Y(goal) - 5).toFixed(1) + '" text-anchor="end" font-size="10" fill="#138A4E">goal ' + goal + '</text>';
+  s += '<polyline points="' + pts + '" fill="none" stroke="#111318" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+  list.forEach(function(x, i){ var last = i === list.length - 1; s += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(x.kg).toFixed(1) + '" r="' + (last ? 5 : 3) + '" fill="' + (last ? "#F4C21B" : "#111318") + '" stroke="#fff" stroke-width="' + (last ? 2 : 0) + '"/>'; });
+  s += '<text x="' + pl + '" y="' + (H - 6) + '" font-size="10" fill="#687084">' + esc(dayLabel(list[0].d)) + '</text><text x="' + (W - pr) + '" y="' + (H - 6) + '" text-anchor="end" font-size="10" fill="#687084">' + esc(dayLabel(list[list.length - 1].d)) + '</text>';
+  return s + '</svg>';
+}
+function saveProfile(fn){ var p = clone(S.me.profile); fn(p); S.me.profile = normProfile(p, S.user); queue("profile", S.me.profile); renderLive(); }
+
+/* ---------------- editor ---------------- */
+function opt(v, label, cur){ return '<option value="' + esc(v) + '"' + (String(v) === String(cur) ? " selected" : "") + '>' + esc(label) + '</option>'; }
+function bSum(b){ return fmtT(toMin(b.start)) + " – " + fmtT(toMin(b.end)); }
+function renderEditor(){
+  if (!draft) draft = clone(S.me.config);
+  $("tplSeg").innerHTML = TPLS.map(function(t){ return '<button type="button" data-tpl="' + t + '" aria-pressed="' + (ui.tpl === t) + '">' + TPL_LABEL[t] + '</button>'; }).join("");
+  $("edBlocks").innerHTML = draft.templates[ui.tpl].map(function(b, i){
+    return '<details class="ed" data-scope="block" data-i="' + i + '"><summary><span class="a">' + esc(bSum(b)) + '</span><span class="b">' + esc(b.title || "Untitled") + '</span></summary><div class="ed-grid">' +
+      '<label class="field">Start<input type="time" data-f="start" value="' + esc(b.start) + '"></label>' +
+      '<label class="field">End<input type="time" data-f="end" value="' + esc(b.end) + '"></label>' +
+      '<label class="field wide">Title<input type="text" data-f="title" maxlength="80" value="' + esc(b.title) + '"></label>' +
+      '<label class="field wide">Note<textarea rows="2" data-f="note">' + esc(b.note) + '</textarea></label>' +
+      '<label class="field">Type<select data-f="kind">' + Object.keys(KINDS).map(function(k){ return opt(k, KINDS[k], b.kind); }).join("") + '</select></label>' +
+      '<label class="field">Alert<select data-f="remind" data-type="num">' + REMIND.map(function(x){ return opt(x[0], x[1], b.remind); }).join("") + '</select></label>' +
+      '<label class="field wide">Alert message<input type="text" data-f="alert" maxlength="120" value="' + esc(b.alert) + '" placeholder="What the alert says"></label>' +
+      '<label class="chk wide"><input type="checkbox" data-f="track" data-type="bool"' + (b.track ? " checked" : "") + '> Check-in counts for my streak</label>' +
+      '<label class="chk wide"><input type="checkbox" data-f="persist" data-type="bool"' + (b.persist ? " checked" : "") + '> Keep chiming in the app until I tap OK</label>' +
+      '<div class="wide"><button type="button" class="btn warn" data-del="block" data-i="' + i + '">Delete block</button></div></div></details>';
+  }).join("") || '<p class="note">No blocks yet.</p>';
+  renderWarnings();
+  $("pingTplLbl").textContent = TPL_LABEL[ui.tpl];
+  $("edPings").innerHTML = draft.pings[ui.tpl].map(function(p, i){
+    return '<details class="ed" data-scope="ping" data-i="' + i + '"><summary><span class="a">' + esc(fmtT(toMin(p.time))) + '</span><span class="b">' + esc(p.title || "Untitled") + '</span></summary><div class="ed-grid">' +
+      '<label class="field">Time<input type="time" data-f="time" value="' + esc(p.time) + '"></label>' +
+      '<label class="field">Type<select data-f="kind">' + Object.keys(PING_KINDS).map(function(k){ return opt(k, PING_KINDS[k], p.kind); }).join("") + '</select></label>' +
+      '<label class="field wide">Title<input type="text" data-f="title" maxlength="80" value="' + esc(p.title) + '"></label>' +
+      '<label class="field wide">Note<input type="text" data-f="note" maxlength="160" value="' + esc(p.note) + '"></label>' +
+      '<div class="wide"><button type="button" class="btn warn" data-del="ping" data-i="' + i + '">Delete reminder</button></div></div></details>';
+  }).join("") || '<p class="note">No reminders for ' + TPL_LABEL[ui.tpl] + '.</p>';
+  Array.prototype.forEach.call(document.querySelectorAll("#v-edit [data-path]"), function(el){
+    var v = getPath(draft, el.getAttribute("data-path"));
+    if (el.type === "checkbox") el.checked = !!v; else el.value = String(v);
+  });
+  renderWaterSummary();
+  $("woEdSeg").innerHTML = WEEK_ORDER.map(function(d){ return '<button type="button" data-woed="' + d + '" aria-pressed="' + (ui.woEdDay === d) + '">' + WD[d] + '</button>'; }).join("");
+  var w = draft.workouts[ui.woEdDay];
+  Array.prototype.forEach.call(document.querySelectorAll("#woEd [data-wo]"), function(el){
+    var f = el.getAttribute("data-wo");
+    el.value = f === "items" ? w.items.map(function(x){ return x.n + (x.s ? " | " + x.s : ""); }).join("\n") : (w[f] || "");
+  });
+  $("habitsEd").value = draft.habits.map(function(h){ return h.text; }).join("\n");
+}
+function renderWarnings(){
+  var list = draft.templates[ui.tpl].map(function(b){ var s = toMin(b.start), e = toMin(b.end); if (e <= s) e += 1440; return { b:b, s:s, e:e }; })
+    .filter(function(x){ return !isNaN(x.s) && !isNaN(x.e); }).sort(function(a, b){ return a.s - b.s; });
+  var msgs = [];
+  for (var i = 0; i + 1 < list.length; i++) if (list[i+1].s < list[i].e) msgs.push('"' + (list[i].b.title || "Untitled") + '" overlaps "' + (list[i+1].b.title || "Untitled") + '" by ' + (list[i].e - list[i+1].s) + ' min.');
+  if (list.length > 1 && list[list.length - 1].e > 1440 + list[0].s) msgs.push('"' + list[list.length - 1].b.title + '" runs into "' + list[0].b.title + '" the next morning.');
+  $("edWarn").innerHTML = msgs.map(function(m){ return '<p class="warnbox">' + esc(m) + '</p>'; }).join("");
+}
+function renderWaterSummary(){
+  var w = draft.water, a = toMin(w.from), b = toMin(w.to), n = 0;
+  if (w.on && !isNaN(a) && !isNaN(b)) for (var m = a; m <= b; m += Math.max(15, +w.every || 60)) n++;
+  $("waterSummary").textContent = w.on ? n + " glasses a day · " + (n * (w.ml || 0) / 1000).toFixed(1) + " L in total." : "Water reminders are off.";
+}
+function getPath(o, p){ return p.split(".").reduce(function(x, k){ return x == null ? x : x[k]; }, o); }
+function setPath(o, p, v){ var ks = p.split("."), last = ks.pop(); ks.reduce(function(x, k){ return x[k]; }, o)[last] = v; }
+function coerce(el){
+  var ty = el.getAttribute("data-type");
+  if (el.type === "checkbox") return el.checked;
+  if (ty === "num") return Number(el.value);
+  if (ty === "bool") return el.value === "true";
+  return el.value;
+}
+function markDirty(){ editDirty = true; $("saveBar").hidden = ui.tab !== "edit"; $("tabbar").hidden = ui.tab === "edit"; }
+function onEdit(e){
+  var el = e.target;
+  if (!draft || el.id === "backupBox") return;
+  if (el.hasAttribute("data-f")) {
+    var card = el.closest("[data-scope]"), i = +card.getAttribute("data-i"), scope = card.getAttribute("data-scope");
+    var arr = scope === "block" ? draft.templates[ui.tpl] : draft.pings[ui.tpl];
+    arr[i][el.getAttribute("data-f")] = coerce(el);
+    card.querySelector(".a").textContent = scope === "block" ? bSum(arr[i]) : fmtT(toMin(arr[i].time));
+    card.querySelector(".b").textContent = arr[i].title || "Untitled";
+    if (scope === "block") renderWarnings();
+    markDirty(); return;
+  }
+  if (el.hasAttribute("data-path")) { setPath(draft, el.getAttribute("data-path"), coerce(el)); renderWaterSummary(); markDirty(); return; }
+  if (el.hasAttribute("data-wo")) {
+    var f = el.getAttribute("data-wo"), w = draft.workouts[ui.woEdDay];
+    if (f === "items") w.items = el.value.split("\n").map(function(line){ var p = line.split("|"); return { n:p[0].trim(), s:p.slice(1).join("|").trim() }; }).filter(function(x){ return x.n; });
+    else w[f] = el.value;
+    markDirty(); return;
+  }
+  if (el.id === "habitsEd") {
+    var old = draft.habits;
+    draft.habits = el.value.split("\n").map(function(s){ return s.trim(); }).filter(Boolean).map(function(text){
+      var m = old.filter(function(h){ return h.text === text; })[0]; return { id: m ? m.id : uid(), text:text };
+    });
+    markDirty();
+  }
+}
+function saveEdits(){
+  TPLS.forEach(function(t){
+    draft.templates[t] = draft.templates[t].map(normBlock).filter(function(b){ return !isNaN(toMin(b.start)) && !isNaN(toMin(b.end)); })
+      .map(function(b){ if (!b.title.trim()) b.title = "Untitled"; return b; }).sort(function(a, b){ return toMin(a.start) - toMin(b.start); });
+    draft.pings[t] = draft.pings[t].map(normPing).filter(function(p){ return !isNaN(toMin(p.time)); }).sort(function(a, b){ return toMin(a.time) - toMin(b.time); });
+  });
+  S.me.config = normCfg(draft, S.user);
+  draft = null; editDirty = false;
+  queue("config", S.me.config, 0);
+  var k = now().key; if (S.me.days[k]) { S.me.days[k].req = C.requiredFor(S.me.config, k); queue("day/" + k, S.me.days[k]); }
+  setTab("plan");
+  fire("Saved", conn.demo ? "Saved in this browser." : "Tap Update calendar so your alerts match.", conn.demo ? {} : { action:{ label:"Update calendar", fn:syncCal } });
+}
+
+/* ---------------- sheets, toast, alerts ---------------- */
+function openSheet(html, onMount){
+  $("sheet").innerHTML = html; $("scrim").hidden = false;
+  if (onMount) onMount($("sheet"));
+}
+function closeSheet(){ $("scrim").hidden = true; $("sheet").innerHTML = ""; }
+var audioCtx = null, fired = {}, titleTimer = null, repeatTimer = null, toastAction = null, wakeLock = null;
+function unlockAudio(){
+  try { if (!audioCtx) { var AC = window.AudioContext || window.webkitAudioContext; if (AC) audioCtx = new AC(); } if (audioCtx && audioCtx.state === "suspended") audioCtx.resume(); } catch(e){}
+}
+function chime(soft){
+  if (!audioCtx || audioCtx.state !== "running") return;
+  try {
+    var t0 = audioCtx.currentTime;
+    (soft ? [988] : [784, 1175, 1568]).forEach(function(f, i){
+      var o = audioCtx.createOscillator(), g = audioCtx.createGain(), t = t0 + i * 0.2;
+      o.type = "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+      o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.65);
+    });
+  } catch(e){}
+}
+function hideToast(){ $("toast").hidden = true; clearInterval(titleTimer); clearInterval(repeatTimer); document.title = "Sharp"; toastAction = null; }
+function fire(title, sub, opts){
+  opts = opts || {};
+  $("toastTitle").textContent = title; $("toastSub").textContent = sub || "";
+  toastAction = opts.action || null;
+  $("toastAct").hidden = !toastAction; if (toastAction) $("toastAct").textContent = toastAction.label;
+  $("toast").hidden = false;
+  clearInterval(titleTimer); clearInterval(repeatTimer);
+  var on = false; titleTimer = setInterval(function(){ on = !on; document.title = on ? "● " + title : "Sharp"; }, 1000);
+  if (!opts.persist) setTimeout(function(){ if ($("toastTitle").textContent === title) hideToast(); }, opts.alert ? 120000 : 6000);
+  if (!opts.alert || !dev().alerts) return;
+  chime(opts.soft);
+  try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch(e){}
+  if (opts.persist) { var n = 0; repeatTimer = setInterval(function(){ if (++n > 10) { clearInterval(repeatTimer); return; } chime(); }, 60000); }
+}
+function checkAlerts(t){
+  var cfg = S.me.config, nowSec = t.min * 60 + t.sec;
+  function due(m){ return nowSec >= m * 60 && nowSec < m * 60 + 60; }
+  blocksFor(cfg, t.key).forEach(function(b){
+    if (b.remind < 0) return;
+    var at = b.s - b.remind, key = t.key + "|b|" + b.id;
+    if (at >= 0 && due(at) && !fired[key]) { fired[key] = 1; fire(b.remind ? "In " + b.remind + " min: " + b.title : b.title, b.alert || b.note, { alert:true, persist:b.persist }); }
+  });
+  pingsFor(cfg, t.key).forEach(function(p){
+    var key = t.key + "|p|" + p.id;
+    if (due(p.s) && !fired[key]) {
+      fired[key] = 1; var k = t.key;
+      fire(p.title, p.note, { alert:true, action: p.kind === "snack" ? { label:"Had it", fn:function(){ mutateDay(k, function(r){ r.pings[p.id] = true; }); } } : p.kind === "weigh" ? { label:"Log weight", fn:openWeigh } : null });
+    }
+  });
+  var slots = waterSlots(cfg);
+  slots.forEach(function(m, i){
+    var key = t.key + "|w|" + m;
+    if (due(m) && !fired[key]) { fired[key] = 1; var k = t.key; fire("Water · " + cfg.water.ml + " ml", "Glass " + (i + 1) + " of " + slots.length + ".", { alert:true, soft:true, action:{ label:"Drank it", fn:function(){ mutateDay(k, function(r){ r.water = Math.min(slots.length, r.water + 1); }); } } }); }
+  });
+}
+function applyAwake(){
+  var d = dev();
+  if (d.awake && navigator.wakeLock && document.visibilityState === "visible") navigator.wakeLock.request("screen").then(function(l){ wakeLock = l; }, function(){});
+  else if (!d.awake && wakeLock) { try { wakeLock.release(); } catch(e){} wakeLock = null; }
+}
+function openWeigh(){
+  setTab("me");
+  setTimeout(function(){ var el = $("wInput"); if (el) { el.scrollIntoView({ block:"center" }); el.focus(); } }, 50);
+}
+function showIncomingCheer(){
+  var seen = lsGet("sharp4.seenCheers", []) || [];
+  var inc = (S.cheers || []).filter(function(c){ return c.to === S.user && seen.indexOf(c.id) < 0; });
+  if (!inc.length) { $("cheerBanner").innerHTML = ""; return; }
+  var c = inc[inc.length - 1], who = (S.buddy.profile && S.buddy.profile.name) || "Your partner";
+  $("cheerBanner").innerHTML = '<div class="banner"><span class="avatar" style="background:var(--signal);color:var(--ink)">' + esc(who[0] || "?") + '</span><div><b>' + esc(who) + '</b><div class="small" style="opacity:.85">' + esc(c.text) + '</div></div><div class="x"><button class="pill sm" type="button" id="cheerSeen" data-ids="' + inc.map(function(x){ return x.id; }).join(",") + '">Thanks</button></div></div>';
+}
+
+/* ---------------- connect / demo / disconnect ---------------- */
+function showConnect(msg){
+  ["today","plan","gym","me","edit"].forEach(function(x){ $("v-" + x).hidden = true; });
+  $("tabbar").hidden = true; $("v-loading").hidden = true; $("v-connect").hidden = false;
+  $("connectErr").hidden = !msg; $("connectErr").textContent = msg || "";
+}
+function showLoading(err){
+  ["today","plan","gym","me","edit"].forEach(function(x){ $("v-" + x).hidden = true; });
+  $("v-connect").hidden = true; $("tabbar").hidden = true; $("v-loading").hidden = false;
+  $("loadingMsg").textContent = err ? "Couldn't reach your Sharp server: " + err + ". Check your internet, then try again." : "Connecting to your Sharp…";
+  $("loadingRetry").hidden = !err;
+}
+function disconnect(msg){
+  if (conn) { lsDel(storeKey()); lsDel(storeKey() + ".pending"); }
+  conn = null; S = null; pending = {}; lsDel("sharp4.conn");
+  showConnect(msg);
+}
+function startDemo(){
+  conn = { demo:true }; lsSet("sharp4.conn", conn);
+  S = emptyState("a");
+  S.me.config = amalConfig(); S.me.profile = defaultProfile("a"); S.me.weights = { list:[], updatedAt:0 };
+  var t = now().key;
+  S.me.profile.since = C.addDays(t, -16);
+  for (var i = 16; i >= 1; i--) {
+    var k = C.addDays(t, -i), r = normDay(null, k), req = C.requiredFor(S.me.config, k);
+    req.forEach(function(id){ r.checks[id] = (i === 6 && id === req[0]) ? "late" : "on"; }); r.req = req; r.water = 10; S.me.days[k] = r;
+  }
+  [[-21,74.8],[-14,74.1],[-7,73.6],[0,73.2]].forEach(function(x){ S.me.weights.list.push({ d:C.addDays(t, x[0]), kg:x[1] }); });
+  S.me.profile.goalKg = 70;
+  S.buddy.config = partnerConfig(); S.buddy.profile = normProfile({ name:"Partner", since:C.addDays(t, -9) }, "b");
+  for (var j = 9; j >= 1; j--) { var bk = C.addDays(t, -j), br = normDay(null, bk); C.requiredFor(S.buddy.config, bk).forEach(function(id){ br.checks[id] = "on"; }); S.buddy.days[bk] = br; }
+  S.cheers = [{ id:"demo1", from:"b", to:"a", text:"Gym time, go!", at:Date.now() }];
+  S.bootstrapped = true; saveLocal(); setSync("demo"); renderAll(); showIncomingCheer();
+}
+
+/* ---------------- events ---------------- */
+document.addEventListener("click", function(e){
+  var el;
+  if ((el = e.target.closest("#tabbar [data-tab]"))) { setTab(el.getAttribute("data-tab")); return; }
+  if ((el = e.target.closest("[data-go]"))) { setTab(el.getAttribute("data-go")); return; }
+  if ((el = e.target.closest("[data-mark]"))) { var k = el.getAttribute("data-k"), id = el.getAttribute("data-id"), v = el.getAttribute("data-mark"); mutateDay(k, function(r){ r.checks[id] = v; }); if (v === "on") fire("Nice", "Checked in on time.", {}); return; }
+  if ((el = e.target.closest("[data-clear]"))) { var k2 = el.getAttribute("data-k"), id2 = el.getAttribute("data-clear"); mutateDay(k2, function(r){ delete r.checks[id2]; }); return; }
+  if ((el = e.target.closest("[data-ping]"))) { var k3 = el.getAttribute("data-k"), id3 = el.getAttribute("data-ping"); mutateDay(k3, function(r){ if (r.pings[id3]) delete r.pings[id3]; else r.pings[id3] = true; }); return; }
+  if ((el = e.target.closest("[data-plan]"))) { var d = el.getAttribute("data-plan"); ui.planDay = d === "today" ? "today" : +d; renderView(); return; }
+  if ((el = e.target.closest("[data-woday]"))) { ui.woDay = +el.getAttribute("data-woday"); renderView(); return; }
+  if ((el = e.target.closest("[data-tpl]"))) { ui.tpl = el.getAttribute("data-tpl"); renderEditor(); return; }
+  if ((el = e.target.closest("[data-woed]"))) { ui.woEdDay = +el.getAttribute("data-woed"); renderEditor(); return; }
+  if ((el = e.target.closest("[data-del]"))) {
+    if (el.getAttribute("data-armed") !== "1") { el.setAttribute("data-armed", "1"); el.textContent = "Tap again to delete"; return; }
+    (el.getAttribute("data-del") === "block" ? draft.templates[ui.tpl] : draft.pings[ui.tpl]).splice(+el.getAttribute("data-i"), 1);
+    markDirty(); renderEditor(); return;
+  }
+  if ((el = e.target.closest("[data-cheer]"))) { sendCheer(el.getAttribute("data-cheer")); return; }
+  var id0 = e.target.closest("button") && e.target.closest("button").id;
+  if (!id0) { if (e.target === $("scrim")) closeSheet(); return; }
+  var t = now();
+  switch (id0) {
+    case "qaWater": var n = waterSlots(S.me.config).length; mutateDay(t.key, function(r){ r.water = Math.min(Math.max(n, 1) + 20, r.water + 1); }); fire("Water +1", rec(t.key).water + " of " + n + " glasses", { action:{ label:"Undo", fn:function(){ mutateDay(now().key, function(r){ r.water = Math.max(0, r.water - 1); }); } } }); break;
+    case "qaHabits": $("foldHabits").open = true; $("foldHabits").scrollIntoView({ behavior:"smooth", block:"center" }); break;
+    case "qaSnack":
+      var sn = pingsFor(S.me.config, t.key).filter(function(p){ return p.kind === "snack"; });
+      var nxt = sn.filter(function(p){ return !rec(t.key).pings[p.id]; })[0];
+      if (nxt) mutateDay(t.key, function(r){ r.pings[nxt.id] = true; });
+      break;
+    case "qaWeigh": openWeigh(); break;
+    case "cheerBtn":
+      openSheet('<h3>Cheer ' + esc((S.buddy.profile && S.buddy.profile.name) || "your partner") + '</h3><div style="display:grid;gap:8px">' +
+        CHEERS.map(function(c){ return '<button class="btn ghost" type="button" data-cheer="' + esc(c) + '">' + esc(c) + '</button>'; }).join("") +
+        '</div><div class="row"><input type="text" id="cheerText" maxlength="140" placeholder="Or write your own" style="flex:1"><button class="btn" type="button" id="cheerSend">Send</button></div><button class="btn ghost" type="button" id="sheetClose">Close</button>');
+      break;
+    case "cheerSend": var ct = $("cheerText").value.trim(); if (ct) sendCheer(ct); break;
+    case "sheetClose": closeSheet(); break;
+    case "cheerSeen": var seen = lsGet("sharp4.seenCheers", []) || []; el = e.target.closest("button"); el.getAttribute("data-ids").split(",").forEach(function(x){ seen.push(x); }); lsSet("sharp4.seenCheers", seen.slice(-100)); $("cheerBanner").innerHTML = ""; break;
+    case "saveFirstName": var fn = $("firstName").value.trim(); if (fn) saveProfile(function(p){ p.name = fn; }); break;
+    case "pauseBtn":
+      var b = e.target.closest("button");
+      if (b.getAttribute("data-armed") !== "1") { b.setAttribute("data-armed", "1"); b.textContent = "Tap again to pause"; break; }
+      var from = $("pauseFrom").value === "yesterday" ? C.addDays(t.key, -1) : t.key, reason = $("pauseReason").value;
+      saveProfile(function(p){ p.pauses.push({ from:from, to:null, reason:reason }); });
+      fire("Streak paused", "Held, not broken. Resume when you're back.");
+      break;
+    case "resumeBtn":
+      saveProfile(function(p){ p.pauses.forEach(function(x){ if (!x.to) x.to = C.addDays(t.key, -1) < x.from ? x.from : C.addDays(t.key, -1); }); });
+      fire("Welcome back", "Your streak is running again from today.");
+      break;
+    case "wSave":
+      var kg = parseFloat(($("wInput").value || "").replace(",", "."));
+      var goal = parseFloat(($("wGoal").value || "").replace(",", "."));
+      if (!(kg > 20 && kg < 300)) { fire("Check the number", "Enter your weight in kg, like 72.4.", {}); break; }
+      var wl = S.me.weights.list.filter(function(x){ return x.d !== t.key; }); wl.push({ d:t.key, kg:Math.round(kg * 10) / 10 });
+      S.me.weights = normWeights({ list:wl }); queue("weights", S.me.weights);
+      if (goal > 20 && goal < 300) saveProfile(function(p){ p.goalKg = Math.round(goal * 10) / 10; }); else renderLive();
+      fire("Logged", kg.toFixed(1) + " kg on " + dayLabel(t.key));
+      break;
+    case "calSync": syncCal(); break;
+    case "calClear":
+      el = e.target.closest("button");
+      if (el.getAttribute("data-armed") !== "1") { el.setAttribute("data-armed", "1"); el.textContent = "Tap again to remove"; break; }
+      el.removeAttribute("data-armed"); el.textContent = "Removing…";
+      api({ key:conn.k, action:"clearCalendar" }).then(function(r){ el.textContent = "Remove events"; if (r && r.busy) { $("calStatus").textContent = r.msg; return; } S.cal = {}; renderCalStatus(); fire("Removed", "Sharp events are gone from your calendar."); }, function(){ el.textContent = "Remove events"; });
+      break;
+    case "editBtn": draft = clone(S.me.config); editDirty = false; setTab("edit"); break;
+    case "saveBtn": saveEdits(); break;
+    case "discardBtn": draft = null; editDirty = false; setTab("plan"); break;
+    case "addBlock": draft.templates[ui.tpl].push(normBlock({ id:uid(), start:"12:00", end:"12:30", title:"New block", kind:"free" })); markDirty(); renderEditor();
+      var cards = document.querySelectorAll("#edBlocks details"); if (cards.length) { cards[cards.length - 1].open = true; cards[cards.length - 1].scrollIntoView({ block:"center" }); } break;
+    case "addPing": draft.pings[ui.tpl].push(normPing({ id:uid(), time:"12:00", title:"New reminder", kind:"alert" })); markDirty(); renderEditor();
+      var pc = document.querySelectorAll("#edPings details"); if (pc.length) pc[pc.length - 1].open = true; break;
+    case "exportBtn":
+      var box = $("backupBox"); box.value = JSON.stringify(S.me.config);
+      try { navigator.clipboard.writeText(box.value).then(function(){ $("backupMsg").textContent = "Copied. Keep it in Notes or an email."; }, function(){ box.select(); $("backupMsg").textContent = "Selected. Copy it somewhere safe."; }); } catch(x){ box.select(); }
+      break;
+    case "importBtn":
+      try { var o = JSON.parse($("backupBox").value); if (!o || !o.templates) throw new Error("no timetable inside"); draft = normCfg(o, S.user); markDirty(); renderEditor(); $("backupMsg").textContent = "Loaded. Check it, then tap Save."; }
+      catch(x){ $("backupMsg").textContent = "That isn't a Sharp backup (" + x.message + ")."; }
+      break;
+    case "resetBtn":
+      el = e.target.closest("button");
+      if (el.getAttribute("data-armed") !== "1") { el.setAttribute("data-armed", "1"); el.textContent = "Tap again to reset"; break; }
+      draft = defaultConfig(S.user); markDirty(); renderEditor(); $("backupMsg").textContent = "Sample plan loaded. Tap Save to keep it.";
+      break;
+    case "syncNow": doSync(); break;
+    case "disconnectBtn":
+      el = e.target.closest("button");
+      if (el.getAttribute("data-armed") !== "1") { el.setAttribute("data-armed", "1"); el.textContent = "Tap again"; break; }
+      disconnect(conn && conn.demo ? "" : "This device is disconnected. Paste your link to connect again."); break;
+    case "connectBtn":
+      var c = parseConnect($("connectInput").value);
+      if (!c) { $("connectErr").hidden = false; $("connectErr").textContent = "That doesn't look like a Sharp link. Copy the whole link from the Links tab."; break; }
+      connectWith(c); break;
+    case "demoBtn": startDemo(); break;
+    case "loadingRetry": showLoading(); doSync(); break;
+    case "loadingReset": disconnect(""); break;
+    case "toastClose": hideToast(); break;
+    case "toastAct": var a = toastAction; hideToast(); if (a) a.fn(); break;
+  }
+});
+function sendCheer(text){
+  closeSheet();
+  if (conn.demo) { fire("Cheer sent", "In the real app your partner sees it next time they open Sharp."); return; }
+  outCheer = { text:text }; doSync();
+  fire("Cheer sent", text);
+}
+document.addEventListener("change", function(e){
+  var el = e.target, t = now();
+  if (el.matches("[data-habit]")) { var id = el.getAttribute("data-habit"), v = el.checked; mutateDay(t.key, function(r){ if (v) r.habits[id] = true; else delete r.habits[id]; }); return; }
+  if (el.matches("[data-wo-i]")) { var i = el.getAttribute("data-wo-i"), c = el.checked; mutateDay(t.key, function(r){ if (c) r.wo.done[i] = true; else delete r.wo.done[i]; }); return; }
+  if (el.id === "meNightly") saveProfile(function(p){ p.nightly = el.checked; });
+  if (el.id === "meShareWeight") saveProfile(function(p){ p.shareWeight = el.checked; });
+  if (el.id === "wDay") saveProfile(function(p){ p.weighDay = +el.value; });
+  if (el.id === "devAlerts") { setDev({ alerts:el.checked }); if (el.checked) { unlockAudio(); setTimeout(function(){ chime(); }, 80); } renderLive(); }
+  if (el.id === "devAwake") { setDev({ awake:el.checked }); applyAwake(); }
+  if (el.id === "meName") { var nm = el.value.trim(); if (nm) saveProfile(function(p){ p.name = nm; }); }
+  if (el.id === "meEmail") { var em = el.value.trim(); saveProfile(function(p){ p.email = em; }); }
+});
+document.addEventListener("click", function(e){
+  if (e.target.closest && e.target.closest("#woDone")) mutateDay(now().key, function(r){ r.wo.complete = !r.wo.complete; if (r.wo.complete) fire("Workout done", "Logged for today.", {}); });
+});
+$("v-edit").addEventListener("input", onEdit);
+$("v-edit").addEventListener("change", onEdit);
+$("copyFrom").addEventListener("change", function(e){
+  var from = e.target.value; e.target.value = "";
+  if (!from || from === ui.tpl || !draft) return;
+  draft.templates[ui.tpl] = draft.templates[from].map(function(b){ var c = clone(b); c.id = uid(); return c; });
+  draft.pings[ui.tpl] = draft.pings[from].map(function(p){ var c = clone(p); c.id = uid(); return c; });
+  markDirty(); renderEditor();
+});
+document.addEventListener("pointerdown", function(){ if (dev().alerts) unlockAudio(); }, { passive:true });
+document.addEventListener("visibilitychange", function(){
+  if (document.visibilityState === "visible") { applyAwake(); tick(true); if (conn && !conn.demo && Date.now() - lastSync > 20000) doSync(); }
+});
+window.addEventListener("online", function(){ if (conn && !conn.demo) doSync(); });
+
+/* ---------------- clock ---------------- */
+var lastMin = -1, lastKey = "";
+function tick(force){
+  if (!S || !S.bootstrapped) return;
+  var t = now();
+  if (force || t.key !== lastKey || t.min !== lastMin) { lastKey = t.key; lastMin = t.min; renderLive(); }
+  else { renderHeader(t); if (ui.tab === "today") renderHero(t); }
+  checkAlerts(t);
+  if (conn && !conn.demo && Date.now() - lastSync > 60000 && !syncing && document.visibilityState === "visible") doSync();
+}
+
+function boot(){
+  if (!conn) { showConnect(); return; }
+  if (conn.demo) { loadLocal(); if (!S) { startDemo(); return; } setSync("demo"); renderAll(); return; }
+  loadLocal();
+  if (S && S.bootstrapped) renderAll(); else showLoading();
+  doSync();
+}
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(function(){});
+}
+boot();
+applyAwake();
+setInterval(tick, 1000);
+})();
+
+</script>
+</body>
+</html>
