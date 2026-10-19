@@ -200,6 +200,8 @@ textarea{resize:vertical}
 .mtile b{font-size:14.5px;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin:2px 0}
 .mtile .eyebrow{display:block}
 
+.tmdb{display:inline-block;padding:4px 10px;border-radius:6px;font-weight:800;letter-spacing:.06em;color:#0d253f;background:linear-gradient(90deg,#90cea1,#01b4e4);text-decoration:none;font-size:13px}
+
 /* Weight chart */
 .chart{width:100%;height:auto;display:block}
 
@@ -445,6 +447,11 @@ textarea{resize:vertical}
       <p class="note" id="syncLbl"></p>
       <div class="row"><button class="btn ghost" type="button" id="syncNow">Sync now</button><button class="btn warn" type="button" id="disconnectBtn">Disconnect</button></div>
     </div>
+    <div class="card" style="display:grid;gap:8px">
+      <span class="eyebrow">Credits</span>
+      <div class="row"><a class="tmdb" href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a><span class="small muted">Movie and TV data and posters</span></div>
+      <p class="note">This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability by JustWatch. Book data from Hardcover, Google Books and Open Library.</p>
+    </div>
   </section>
 </main>
 
@@ -591,7 +598,7 @@ var SharpCore = (function () {
 (function () {
 "use strict";
 var C = SharpCore;
-var APP_VERSION = 5;
+var APP_VERSION = 6;
 var IST = 330;
 var WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 var WDL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -1567,7 +1574,8 @@ function normBook(b){
     cover:String(b.cover || ""), status: BOOK_STATUS[b.status] ? b.status : "want", page:Math.max(0, Math.round(+b.page || 0)),
     started:b.started ? String(b.started) : "", finished:b.finished ? String(b.finished) : "", rating:Math.max(0, Math.min(5, +b.rating || 0)),
     notes:String(b.notes || ""), sessions: Array.isArray(b.sessions) ? b.sessions.filter(function(x){ return x && x.d; }).map(function(x){ return { d:String(x.d), p:Math.round(+x.p || 0) }; }) : [],
-    year:String(b.year || ""), deleted:!!b.deleted, updatedAt:Number(b.updatedAt) || 0 };
+    year:String(b.year || ""), series:String(b.series || ""), hcId:b.hcId ? Number(b.hcId) : null, hcRating:+b.hcRating || 0,
+    deleted:!!b.deleted, updatedAt:Number(b.updatedAt) || 0 };
 }
 function normMovie(m){
   m = m || {};
@@ -1575,7 +1583,10 @@ function normMovie(m){
     desc:String(m.desc || ""), status: MOVIE_STATUS[m.status] ? m.status : "list", platform:String(m.platform || ""),
     season:Math.max(1, Math.round(+m.season || 1)), ep:Math.max(1, Math.round(+m.ep || 1)), eps:Math.max(0, Math.round(+m.eps || 0)),
     watchedOn:m.watchedOn ? String(m.watchedOn) : "", rating:Math.max(0, Math.min(5, +m.rating || 0)), notes:String(m.notes || ""),
-    together:!!m.together, deleted:!!m.deleted, updatedAt:Number(m.updatedAt) || 0 };
+    together:!!m.together, tmdbId:m.tmdbId ? Number(m.tmdbId) : null, mediaType:m.mediaType === "tv" || m.mediaType === "movie" ? m.mediaType : "",
+    seasonEps: m.seasonEps && typeof m.seasonEps === "object" ? Object.assign({}, m.seasonEps) : {}, totalSeasons:Math.max(0, +m.totalSeasons || 0),
+    showStatus:String(m.showStatus || ""), year:String(m.year || ""), overview:String(m.overview || ""), runtime:Math.max(0, +m.runtime || 0), tmdbRating:+m.tmdbRating || 0,
+    deleted:!!m.deleted, updatedAt:Number(m.updatedAt) || 0 };
 }
 function listOf(side, kind){
   var o = (side && side[kind]) || {};
@@ -1585,9 +1596,16 @@ function saveBook(b){ b = normBook(b); S.me.books[b.id] = b; queue("book/" + b.i
 function saveMovie(m){ m = normMovie(m); S.me.movies[m.id] = m; queue("movie/" + m.id, m); renderLive(); return m; }
 function stars(n){ var s = ""; for (var i = 1; i <= 5; i++) s += i <= n ? "★" : "☆"; return '<span class="stars" aria-label="' + n + ' of 5">' + s + '</span>'; }
 function coverImg(url, title, cls){
-  if (url) return '<img class="cover ' + (cls || "") + '" src="' + esc(url) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.removeAttribute(\'src\')">';
-  return '<span class="cover ph ' + (cls || "") + '">' + esc((title || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "•") + '</span>';
+  var ini = esc((title || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "•");
+  if (url) return '<img class="cover ' + (cls || "") + '" src="' + esc(url) + '" alt="" data-ini="' + ini + '" loading="lazy" referrerpolicy="no-referrer" onerror="coverFail(this)">';
+  return '<span class="cover ph ' + (cls || "") + '">' + ini + '</span>';
 }
+function coverFail(img){
+  var s = document.createElement("span");
+  s.className = img.className + " ph"; s.textContent = img.getAttribute("data-ini") || "•";
+  if (img.parentNode) img.parentNode.replaceChild(s, img);
+}
+window.coverFail = coverFail;
 function bookPct(b){ return b.pages ? Math.min(100, Math.round(b.page / b.pages * 100)) : 0; }
 function bookPace(b, today){
   var from = C.addDays(today, -13), sum = 0;
@@ -1606,7 +1624,10 @@ function bookLine(b, today){
   }
   return line;
 }
-function nextEp(m){ return m.type === "series" ? "S" + m.season + " · E" + m.ep : ""; }
+function epsFor(m){ return (m.seasonEps && +m.seasonEps[m.season]) || m.eps || 0; }
+function caughtUp(m){ var n = epsFor(m); return m.type === "series" && n > 0 && m.ep > n && (!m.totalSeasons || m.season >= m.totalSeasons); }
+function nextEp(m){ return m.type === "series" ? (caughtUp(m) ? "All caught up" : "S" + m.season + " · E" + m.ep) : ""; }
+function canLookup(){ return conn && !conn.demo && (S.serverVersion || 0) >= 6; }
 function readStreak(){ return C.runStreak(S.me.profile, S.me.days, now().key, function(r){ return (r.readPages || 0) > 0; }); }
 
 function renderLib(t){
@@ -1662,11 +1683,12 @@ function moviesHTML(t){
   if (!all.length) h += '<div class="card" style="display:grid;gap:10px"><b>Nothing here yet</b><p class="note">Add what you\'re watching now, or your watchlist for the 8–10 AM screen slot.</p><button class="btn" type="button" data-libadd="watch">Add a movie or series</button></div>';
   watching.forEach(function(m){
     var act = m.type === "series"
-      ? '<button class="pill sm ink" type="button" data-ep="' + esc(m.id) + '">Watched E' + m.ep + '</button>'
+      ? (caughtUp(m) ? (m.tmdbId ? '<button class="pill sm" type="button" data-mrefresh="' + esc(m.id) + '">Check for new episodes</button>' : '')
+                     : '<button class="pill sm ink" type="button" data-ep="' + esc(m.id) + '">Watched E' + m.ep + '</button>')
       : '<button class="pill sm ink" type="button" data-mdone="' + esc(m.id) + '">Watched it</button>';
     h += '<div class="card book" data-movie="' + esc(m.id) + '">' + coverImg(m.poster, m.title) +
       '<div class="bk-main"><span class="eyebrow">' + (m.type === "series" ? "Series" : "Movie") + (m.platform ? " · " + esc(m.platform) : "") + '</span><b>' + esc(m.title) + '</b>' +
-      (m.type === "series" ? '<span class="small">Next: <b>' + nextEp(m) + '</b>' + (m.eps ? ' of ' + m.eps : "") + '</span>' : '<span class="small muted">' + esc(m.desc) + '</span>') +
+      (m.type === "series" ? '<span class="small">' + (caughtUp(m) ? '<b>All caught up</b>' : 'Next: <b>' + nextEp(m) + '</b>' + (epsFor(m) ? ' of ' + epsFor(m) : "")) + (m.totalSeasons ? ' · ' + m.totalSeasons + ' season' + (m.totalSeasons > 1 ? "s" : "") : "") + '</span>' : '<span class="small muted">' + esc(m.desc) + (m.runtime ? ' · ' + m.runtime + ' min' : "") + '</span>') +
       '<div class="row">' + act + '</div></div></div>';
   });
   function shelf(title, items, btn, attr){
@@ -1761,30 +1783,64 @@ function openAdd(kind){
     '<button class="btn" type="button" id="libManual">Add</button></div></details>' +
     '<button class="btn ghost" type="button" id="sheetClose">Close</button>', function(){ var q = $("libQ"); if (q) q.focus(); });
 }
+var SOURCE_LABEL = { tmdb:"TMDB", hardcover:"Hardcover", basic:"" };
+function serverLookup(kind, q){
+  if (!canLookup()) return Promise.reject(new Error("no server search"));
+  return api({ key:conn.k, action:"lookup", type:kind, q:q }).then(function(r){
+    if (!r || !r.ok) { lib.msg = r && r.code !== "nokey" ? (r.error || "") : ""; throw new Error((r && r.error) || "lookup failed"); }
+    lib.msg = ""; lib.source = r.source; return r.results || [];
+  });
+}
 function runSearch(){
   var q = ($("libQ").value || "").trim(); if (!q) return;
-  var box = $("libResults"); box.innerHTML = '<p class="note">Searching…</p>';
-  (sheetCtx.kind === "books" ? searchBooks(q) : searchTitles(q)).then(function(res){
-    lib.results = res;
-    if (!res.length) { box.innerHTML = '<p class="note">Nothing found. Try fewer words, or add it by hand below.</p>'; return; }
-    box.innerHTML = '<ul class="mlist">' + res.map(function(r, i){
-      var sub = sheetCtx.kind === "books" ? esc(r.author) + (r.pages ? " · " + r.pages + " pages" : "") + (r.year ? " · " + esc(r.year) : "") : esc(r.desc);
-      return '<li>' + coverImg(sheetCtx.kind === "books" ? r.cover : r.poster, r.title, "sm") + '<span class="mt">' + esc(r.title) + '<small>' + sub + '</small></span><button class="pill sm ink" type="button" data-addres="' + i + '">Add</button></li>';
-    }).join("") + '</ul>';
-  }).catch(function(){ box.innerHTML = '<p class="warnbox">Search isn\'t reachable right now. Add it by hand below.</p>'; });
+  var box = $("libResults"), kind = sheetCtx.kind; box.innerHTML = '<p class="note">Searching…</p>';
+  lib.source = "basic";
+  serverLookup(kind, q).then(function(res){ if (!res.length) throw new Error("none"); return res; })
+    .catch(function(){ lib.source = "basic"; return kind === "books" ? searchBooks(q) : searchTitles(q); })
+    .then(function(res){
+      lib.results = res;
+      if (!res.length) { box.innerHTML = '<p class="note">Nothing found. Try fewer words, or add it by hand below.</p>'; return; }
+      var note = lib.msg ? '<p class="warnbox">' + esc(lib.msg) + ' Showing basic results.</p>' : "";
+      box.innerHTML = note + '<ul class="mlist">' + res.map(function(r, i){
+        var sub = kind === "books"
+          ? esc(r.author) + (r.pages ? " · " + r.pages + " pages" : "") + (r.year ? " · " + esc(r.year) : "") + (r.series ? " · " + esc(r.series) : "") + (r.rating ? " · ★ " + r.rating : "")
+          : esc(r.desc) + (r.rating ? " · ★ " + r.rating : "");
+        return '<li>' + coverImg(kind === "books" ? r.cover : r.poster, r.title, "sm") + '<span class="mt">' + esc(r.title) + '<small>' + sub + '</small></span><button class="pill sm ink" type="button" data-addres="' + i + '">Add</button></li>';
+      }).join("") + '</ul>' + (SOURCE_LABEL[lib.source] ? '<p class="note">Results from ' + SOURCE_LABEL[lib.source] + '.</p>' : "");
+    }).catch(function(){ box.innerHTML = '<p class="warnbox">Search isn\'t reachable right now. Add it by hand below.</p>'; });
+}
+function applyDetails(id, d){
+  var m = normMovie(S.me.movies[id]); if (!m || !d || !d.ok) return null;
+  if (d.seasonEps) m.seasonEps = d.seasonEps;
+  if (d.totalSeasons) m.totalSeasons = d.totalSeasons;
+  if (d.status) m.showStatus = d.status;
+  if (d.runtime) m.runtime = d.runtime;
+  if (d.rating) m.tmdbRating = d.rating;
+  if (d.providers && d.providers.length && !m.platform) m.platform = d.providers.slice(0, 2).join(" / ");
+  return saveMovie(m);
+}
+function fetchDetails(id, announce){
+  var m = S.me.movies[id]; if (!m || !m.tmdbId || !canLookup()) return Promise.resolve(null);
+  return api({ key:conn.k, action:"details", mediaType:m.mediaType || (m.type === "series" ? "tv" : "movie"), id:m.tmdbId }).then(function(d){
+    var x = applyDetails(id, d);
+    if (announce && x) fire(caughtUp(x) ? "No new episodes yet" : "Updated", x.type === "series" ? (caughtUp(x) ? x.title + " is up to date." : "Next: " + nextEp(x) + (epsFor(x) ? " of " + epsFor(x) : "")) : x.title);
+    return x;
+  }).catch(function(){ if (announce) fire("Couldn't refresh", "Try again in a minute."); return null; });
 }
 function addFrom(r, kind, to){
   var t = now().key;
   if (kind === "books") {
-    var b = normBook({ id:uid(), title:r.title, author:r.author, pages:r.pages, cover:r.cover, year:r.year, status:to });
+    var b = normBook({ id:uid(), title:r.title, author:r.author, pages:r.pages, cover:r.cover, year:r.year, status:to, series:r.series, hcId:r.hcId, hcRating:r.rating });
     if (to === "reading") b.started = t;
     if (to === "done") { b.finished = t; b.page = b.pages; }
     saveBook(b); fire("Added", b.title);
     if (to === "reading" && !b.pages) setTimeout(function(){ openBook(b.id); }, 50); else closeSheet();
   } else {
-    var m = normMovie({ id:uid(), title:r.title, type:r.type, poster:r.poster, desc:r.desc, status:to });
+    var m = normMovie({ id:uid(), title:r.title, type:r.type, poster:r.poster, desc:r.desc, status:to, tmdbId:r.tmdbId, mediaType:r.mediaType,
+                        year:r.year, overview:r.overview, tmdbRating:r.rating });
     if (to === "done") m.watchedOn = t;
     saveMovie(m); fire("Added", m.title); closeSheet();
+    if (m.tmdbId) fetchDetails(m.id, false);
   }
   lib.seg = kind; if (ui.tab !== "lib") setTab("lib");
 }
@@ -1808,17 +1864,20 @@ function openBook(id){
 function openMovie(id){
   var m = S.me.movies[id]; if (!m) return;
   sheetCtx = { type:"movie", id:id, rating:m.rating };
-  openSheet('<div class="row" style="align-items:flex-start;flex-wrap:nowrap">' + coverImg(m.poster, m.title, "lg") + '<div style="display:grid;gap:4px;min-width:0"><h3>' + esc(m.title) + '</h3><span class="small muted">' + esc(m.desc) + '</span></div></div>' +
+  var info = [m.desc, m.tmdbRating ? "★ " + m.tmdbRating + " on TMDB" : "", m.totalSeasons ? m.totalSeasons + " season" + (m.totalSeasons > 1 ? "s" : "") + (m.showStatus ? " · " + m.showStatus : "") : "", m.runtime ? m.runtime + " min" : ""].filter(Boolean).join(" · ");
+  openSheet('<div class="row" style="align-items:flex-start;flex-wrap:nowrap">' + coverImg(m.poster, m.title, "lg") + '<div style="display:grid;gap:4px;min-width:0"><h3>' + esc(m.title) + '</h3><span class="small muted">' + esc(info) + '</span>' +
+    (m.overview ? '<span class="small">' + esc(m.overview) + '</span>' : "") + '</div></div>' +
     '<div class="grid2"><label class="field">Status<select id="mStatus">' + Object.keys(MOVIE_STATUS).map(function(k){ return '<option value="' + k + '"' + (m.status === k ? " selected" : "") + '>' + MOVIE_STATUS[k] + '</option>'; }).join("") + '</select></label>' +
     '<label class="field">Type<select id="mType"><option value="movie"' + (m.type === "movie" ? " selected" : "") + '>Movie</option><option value="series"' + (m.type === "series" ? " selected" : "") + '>Series</option></select></label>' +
     '<label class="field">Season<input type="number" id="mSeason" inputmode="numeric" min="1" value="' + m.season + '"></label>' +
     '<label class="field">Next episode<input type="number" id="mEp" inputmode="numeric" min="1" value="' + m.ep + '"></label>' +
-    '<label class="field">Episodes this season<input type="number" id="mEps" inputmode="numeric" min="0" value="' + (m.eps || "") + '" placeholder="Optional"></label>' +
+    '<label class="field">Episodes this season<input type="number" id="mEps" inputmode="numeric" min="0" value="' + (m.eps || "") + '" placeholder="' + ((m.seasonEps && m.seasonEps[m.season]) ? m.seasonEps[m.season] + " (auto)" : "Optional") + '"></label>' +
     '<label class="field">Where to watch<input type="text" id="mPlat" value="' + esc(m.platform) + '" placeholder="Netflix, Prime, Hotstar…"></label></div>' +
     '<label class="chk"><input type="checkbox" id="mTogether"' + (m.together ? " checked" : "") + '> Watch together (shows on your partner\'s list)</label>' +
     '<span class="field">Rating</span>' + ratePick(m.rating) +
     '<label class="field">Notes<textarea id="mNotes" rows="3">' + esc(m.notes) + '</textarea></label>' +
-    '<div class="row"><button class="btn" type="button" id="mSave">Save</button><button class="btn ghost" type="button" id="sheetClose">Close</button><button class="btn warn" type="button" id="mDel" style="margin-left:auto">Delete</button></div>');
+    '<div class="row"><button class="btn" type="button" id="mSave">Save</button>' + (m.tmdbId && canLookup() ? '<button class="btn ghost" type="button" data-mrefresh="' + esc(m.id) + '">Refresh info</button>' : "") +
+    '<button class="btn ghost" type="button" id="sheetClose">Close</button><button class="btn warn" type="button" id="mDel" style="margin-left:auto">Delete</button></div>');
 }
 function openLog(id){
   var b = S.me.books[id]; if (!b) return;
@@ -1857,11 +1916,17 @@ function libClick(e){
     var b = normBook(S.me.books[el.getAttribute("data-bstart")]); b.status = "reading"; if (!b.started) b.started = now().key; saveBook(b); fire("Reading", b.title); return true;
   }
   if ((el = e.target.closest("[data-ep]"))) {
-    var m = normMovie(S.me.movies[el.getAttribute("data-ep")]), was = nextEp(m);
-    if (m.eps && m.ep >= m.eps) { m.season += 1; m.ep = 1; } else m.ep += 1;
-    saveMovie(m); fire("Watched " + was, "Next up: " + nextEp(m), { action:{ label:"Undo", fn:function(){ var x = normMovie(S.me.movies[m.id]); if (x.ep > 1) x.ep -= 1; else if (x.season > 1) { x.season -= 1; x.ep = x.eps || 1; } saveMovie(x); } } });
+    var m = normMovie(S.me.movies[el.getAttribute("data-ep")]), was = nextEp(m), n = epsFor(m);
+    var lastSeason = !m.totalSeasons || m.season >= m.totalSeasons;
+    if (n && m.ep >= n && !lastSeason) { m.season += 1; m.ep = 1; } else m.ep += 1;
+    var ended = caughtUp(m) && /ended|canceled|cancelled/i.test(m.showStatus);
+    if (ended) { m.status = "done"; m.watchedOn = now().key; }
+    saveMovie(m);
+    fire("Watched " + was, ended ? "That was the final episode. Rate it?" : caughtUp(m) ? "You're all caught up." : "Next up: " + nextEp(m),
+      ended ? { action:{ label:"Rate", fn:function(){ openMovie(m.id); } } } : { action:{ label:"Undo", fn:function(){ var x = normMovie(S.me.movies[m.id]); if (x.status === "done") x.status = "watching"; if (x.ep > 1) x.ep -= 1; else if (x.season > 1) { x.season -= 1; x.ep = epsFor(x) || 1; } saveMovie(x); } } });
     return true;
   }
+  if ((el = e.target.closest("[data-mrefresh]"))) { closeSheet(); fetchDetails(el.getAttribute("data-mrefresh"), true); return true; }
   if ((el = e.target.closest("[data-mdone]"))) { var md = normMovie(S.me.movies[el.getAttribute("data-mdone")]); md.status = "done"; md.watchedOn = now().key; saveMovie(md); openMovie(md.id); return true; }
   if ((el = e.target.closest("[data-mstart]"))) { var ms = normMovie(S.me.movies[el.getAttribute("data-mstart")]); ms.status = "watching"; saveMovie(ms); fire("Watching", ms.title); return true; }
   if ((el = e.target.closest("[data-copymovie]"))) {
